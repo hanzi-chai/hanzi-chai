@@ -24,6 +24,7 @@ export type Example =
   | "xuma"
   | "yustar"
   | "yujoy"
+  | "yuling"
   | "zhangma"
   | "zhengma"
   | "zhenma";
@@ -47,6 +48,7 @@ export const keyboardTypes = [
   "字源",
   "星陈",
   "卿云",
+  "灵明",
   "郑码",
   "真码",
   "张码",
@@ -76,6 +78,7 @@ export const encoderTypes = [
   "双编形码（易码）",
   "双编形码（星陈）",
   "双编形码（卿云）",
+  "双编形码（灵明）",
   "双编形码（虎码）",
   "双编形码（天码）",
 ] as const;
@@ -107,6 +110,7 @@ export function 创建方案模板(示例: Record<Example, 配置>) {
     字源: examples.ziyuan.form,
     星陈: examples.yustar.form,
     卿云: examples.yujoy.form,
+    灵明: examples.yuling.form,
     郑码: examples.zhengma.form,
     真码: examples.zhenma.form,
     张码: examples.zhangma.form,
@@ -137,6 +141,7 @@ export function 创建方案模板(示例: Record<Example, 配置>) {
     "双编形码（易码）": examples.easy.encoder,
     "双编形码（星陈）": examples.yustar.encoder,
     "双编形码（卿云）": examples.yujoy.encoder,
+    "双编形码（灵明）": examples.yuling.encoder,
     "双编形码（虎码）": examples.huma.encoder,
     "双编形码（天码）": examples.tianma.encoder,
   };
