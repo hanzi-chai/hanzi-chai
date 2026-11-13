@@ -125,6 +125,28 @@ export function 阶重加增量(k: number, m: number, 按键数: number): number
   if (k === 0) return m >= 1 ? 1 : 0;
   return (m + 0.5) / 按键数 ** k;
 }
+/**
+ * 批量入组（**唯一实现**）：把一个空位模式下的全部码位序列灌进分组表，返回该模式的总值。
+ * 智能选根的「设置基态」以前自己写了一遍这个循环——挪到这里，公式与入组口径只有一份。
+ * 组.值 = Σ 增量，与 阶重加增量 的定义天然一致（先 m 有 0 个，逐个 +1）。
+ */
+export function 阶重入组(
+  序列列表: ({ element: string; index: number } | string | [string, number])[][],
+  空位: number[],
+  组: Map<string, number>,
+  按键数: number,
+  maxLength: number,
+): number {
+  let v = 0;
+  for (const 序列 of 序列列表) {
+    const 键 = 阶重序列键(序列, 空位, maxLength);
+    const m = 组.get(键) ?? 0;
+    v += 阶重加增量(空位.length, m, 按键数);
+    组.set(键, m + 1);
+  }
+  return v;
+}
+
 export function 阶重减增量(k: number, n: number, 按键数: number): number {
   if (k === 0) return n >= 2 ? -1 : 0;
   return -(n - 0.5) / 按键数 ** k;

@@ -64,6 +64,7 @@ import {
   字母表原子,
   字形分析配置原子,
   组装配置原子,
+  自定义分析数据库,
 } from "~/atoms";
 import { get预加载数据 } from "~/preload";
 import {
@@ -1803,6 +1804,9 @@ function 智能选根面板() {
   const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
   const 字库 = useAtomValueUnwrapped(如字库原子);
   const 原始词典 = useAtomValue(原始词典原子);
+  // 自定义元素（自定义分析）存在 IndexedDB，不在方案 yaml 里。必须随 worker 一起传，
+  // 否则自动搜索的装配与手动分析不同源（实测同一方案 必撞 1 vs 5）。
+  const 自定义元素集 = useAtomValue(自定义分析数据库.entries);
 
   // 自动搜索参数：只认方案 yaml 里的顶层 `autoselect` 块（导出即带上、换机器也在）。
   // 历史上一度存在 localStorage（全局一份、不分方案），该做法已废弃，这里不做任何兼容读取。
@@ -2133,6 +2137,7 @@ function 智能选根面板() {
           type: "mine",
           配置,
           内置字库数据: Object.values(get预加载数据().原始字库数据),
+          自定义元素集合: 自定义元素集,
           原始词典,
           允许复合体,
           // worker 不跑 搜索()，白名单得靠字根表在那边自己算（取手动指定白名单 同一份实现）
@@ -2240,6 +2245,7 @@ function 智能选根面板() {
           type: "组挖掘",
           配置,
           内置字库数据: Object.values(get预加载数据().原始字库数据),
+          自定义元素集合: 自定义元素集,
           原始词典,
           mapping: 起始mapping,
           表列表,
@@ -2429,6 +2435,7 @@ function 智能选根面板() {
       type: "start",
       配置,
       内置字库数据: Object.values(get预加载数据().原始字库数据),
+      自定义元素集合: 自定义元素集,
       原始词典,
       mapping: 起始mapping,
       参数: {
@@ -3317,6 +3324,18 @@ function 智能选根面板() {
             ，{结果.收敛 ? "已收敛" : "未收敛"}，共{" "}
             {结果.轮日志.filter((r) => r.轮 !== 0).length} 轮）
           </Typography.Text>
+          {/* 起始分对账（2026-11-13）：把「这个总分是怎么来的」摊开——每张表 权重×值、根数罚分、合计。
+              只说一个孤零零的总分，出问题时没法判断是表值变了、权重变了，还是聚合错了。 */}
+          {结果.评分构成 && (
+            <Typography.Text type="secondary" className="mt-1 block text-xs!">
+              起始分构成：
+              {结果.评分构成.表
+                .map((t) => `${t.名} ${Math.round(t.值 * 100) / 100}×${t.权重}`)
+                .join(" + ")}
+              {" + "}根数罚分 {Math.round(结果.评分构成.罚分 * 100) / 100}（根{" "}
+              {结果.评分构成.根数}）= {Math.round(结果.评分构成.合计 * 100) / 100}
+            </Typography.Text>
+          )}
           {结果.收敛 && 结果.轮日志.filter((r) => r.轮 !== 0).length === 0 && (
             <Typography.Text type="secondary" className="mt-1 block">
               无可改进的动作

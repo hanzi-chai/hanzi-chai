@@ -48,7 +48,7 @@ self.onmessage = async (e: MessageEvent) => {
   if (msg.type === "mine") {
     try {
       post({ type: "阶段", 文本: "构建字库（约数秒）……" });
-      const 核心 = new 智能选根核心(msg.配置, msg.原始词典, msg.内置字库数据);
+      const 核心 = new 智能选根核心(msg.配置, msg.原始词典, msg.内置字库数据, { 自定义元素集合: (msg as any).自定义元素集合 });
       // 这两个后台任务只挖榜、不调 搜索()，所以白名单要在这里自己设：
       // 否则用户点名的同形根会被同形兄弟合并成一个代表，界面上永远显示「挖不出」。
       // 提取逻辑与 搜索() 共用一个函数（取手动指定白名单），别在这里另写一遍。
@@ -71,7 +71,7 @@ self.onmessage = async (e: MessageEvent) => {
     try {
       停止 = false;
       post({ type: "阶段", 文本: "构建字库与分析器（约数秒）……" });
-      const 核心 = new 智能选根核心(msg.配置, msg.原始词典, msg.内置字库数据);
+      const 核心 = new 智能选根核心(msg.配置, msg.原始词典, msg.内置字库数据, { 自定义元素集合: (msg as any).自定义元素集合 });
       核心.设置强制独立根(取手动指定白名单(msg.字根表列表));
       核心.设置基态(msg.mapping);
       post({ type: "阶段", 文本: "组伤害排名 + 切片挖掘 + 分离收益计分……" });
@@ -90,7 +90,7 @@ self.onmessage = async (e: MessageEvent) => {
   停止 = false;
   try {
     post({ type: "阶段", 文本: "构建字库与分析器（约数秒）……" });
-    const 核心 = new 智能选根核心(msg.配置, msg.原始词典, msg.内置字库数据);
+    const 核心 = new 智能选根核心(msg.配置, msg.原始词典, msg.内置字库数据, { 自定义元素集合: (msg as any).自定义元素集合 });
     const 回调 = {
       on阶段: (文本: string) => post({ type: "阶段", 文本 }),
       on轮进度: (已评: number, 总数: number, 最优: string, 最优分: number, 变化: number | null) =>
