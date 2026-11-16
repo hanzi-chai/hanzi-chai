@@ -95,6 +95,7 @@ import { CharacterDisplay, DeleteButton } from "~/components/Utils";
 import Value from "~/components/Value";
 import { 安排文本, 根安排描述 } from "~/lib/安排显示";
 import { 按分隔拆分 } from "~/lib/分隔";
+import { 汇总字频 } from "~/lib/字频";
 
 /** 自动搜索参数：随方案 yaml 走，存顶层 `autoselect` 块（键名与页面 state 一一对应，1:1 落盘）。
  *  只放"这次怎么跑"的旋钮；评分表仍在 `statistics.tables`，两者各司其职。 */
@@ -2018,10 +2019,9 @@ function 智能选根面板() {
   }, [起始mapping, 名到字形, 退化器, 手动指定白名单]);
 
   // —— 候选字根的数据准备：全字库笔顺索引 ——
-  const 频率表 = useMemo(
-    () => new Map(原始词典.map((d) => [d.词, d.频率] as [string, number])),
-    [原始词典],
-  );
+  // 字频按「同一个词的多行相加」（唯一实现 汇总字频）：直接 Map 直构是末行取胜，
+  // 的/了/和/都 这类高频字的 0 频读法排在后面，整字会被当成 0 频排到最末。
+  const 频率表 = useMemo(() => 汇总字频(原始词典), [原始词典]);
   const 笔顺索引 = useMemo(() => {
     const 串到代表 = new Map<string, { 名: string; 串: string; 频: number }>();
     const 名到串 = new Map<string, string>();
