@@ -20,6 +20,13 @@ export interface 字形归部结果 {
   fallback: boolean;
 }
 
+export interface 字形编号分组 {
+  radical_number: number;
+  remaining_strokes: number;
+  stroke_bucket: number;
+  stroke_sequence: string;
+}
+
 /** 基于实际引用树归部，不从字符名称、字源或 Unihan 归部反推。 */
 export class 字形归部检索 {
   private 字形表: Map<number, 字形数据>;
@@ -108,6 +115,22 @@ export class 字形归部检索 {
     路径.delete(id);
     this.笔顺缓存.set(id, 笔顺);
     return 笔顺;
+  }
+
+  获取编号分组(id: number): 字形编号分组 {
+    const 字形 = this.获取字形(id);
+    const 笔顺 = this.获取笔顺(id);
+    const 归部 = 字形.type === "compound" ? this.归部(id) : undefined;
+    if (归部 && 归部.radical_numbers.length !== 1)
+      throw new Error(`字形 ${id} 的部首未消歧`);
+    const 余笔 = 归部?.remaining_strokes ?? 笔顺.length;
+    if (余笔 < 1) throw new Error(`字形 ${id} 的余笔数为 ${余笔}`);
+    return {
+      radical_number: 归部?.radical_numbers[0] ?? 0,
+      remaining_strokes: 余笔,
+      stroke_bucket: Math.min(16, 余笔) - 1,
+      stroke_sequence: 笔顺,
+    };
   }
 
   归部(id: number): 字形归部结果 {

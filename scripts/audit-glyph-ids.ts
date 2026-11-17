@@ -5,12 +5,12 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import type { 字形数据, 字符数据 } from "../src/data.js";
 import {
-  字形溢出表,
   是合法字形ID,
   格式化字形ID,
   溢出字形起点,
   生成字形起点,
 } from "../src/glyph-id.js";
+import { 补全字形溢出表 } from "../src/glyph-id-allocation.js";
 import { 字形归部检索 } from "../src/glyph-radical.js";
 import { 创建部首反查表, 康熙部首表 } from "../src/kangxi-radicals.js";
 
@@ -29,6 +29,7 @@ const [字形文本, 字符文本] = await Promise.all([
 const 字形列表: 字形数据[] = JSON.parse(字形文本);
 const 字符列表: 字符数据[] = JSON.parse(字符文本);
 const 检索 = new 字形归部检索(字形列表);
+const 字形溢出表 = 补全字形溢出表(字形列表);
 const 字符反查 = new Map<number, string[]>();
 for (const 字符 of 字符列表) {
   for (const { id } of 字符.glyphs) {

@@ -53,6 +53,7 @@ export * from "./explain.js";
 export * from "./filter.js";
 export { 默认融合字形 } from "./fusion.js";
 export * from "./glyph-id.js";
+export * from "./glyph-id-allocation.js";
 export * from "./glyph-metadata.js";
 export * from "./glyph-radical.js";
 export * from "./kangxi-radicals.js";

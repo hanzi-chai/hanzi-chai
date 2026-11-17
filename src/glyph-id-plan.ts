@@ -22,23 +22,13 @@ export function 规划字形ID迁移(
   const 检索 = new 字形归部检索(字形列表, 部首表);
   const 分组 = new Map<number, 字形ID迁移条目[]>();
   for (const 字形 of 字形列表) {
-    const 笔顺 = 检索.获取笔顺(字形.id);
-    const 归部 = 字形.type === "compound" ? 检索.归部(字形.id) : undefined;
-    if (归部 && 归部.radical_numbers.length !== 1)
-      throw new Error(`字形 ${字形.id} 的部首未消歧`);
-    const 部首 = 归部?.radical_numbers[0] ?? 0;
-    const 余笔 = 归部?.remaining_strokes ?? 笔顺.length;
-    if (余笔 < 1) throw new Error(`字形 ${字形.id} 的余笔数为 ${余笔}`);
-    const 桶 = Math.min(16, 余笔) - 1;
-    const 组ID = 部首 * 16 + 桶;
+    const 信息 = 检索.获取编号分组(字形.id);
+    const 组ID = 信息.radical_number * 16 + 信息.stroke_bucket;
     const 组 = 分组.get(组ID) ?? [];
     组.push({
       old_id: 字形.id,
       id: -1,
-      radical_number: 部首,
-      remaining_strokes: 余笔,
-      stroke_bucket: 桶,
-      stroke_sequence: 笔顺,
+      ...信息,
       ordinal: -1,
       overflow: false,
     });

@@ -3,6 +3,7 @@ import {
   type EquivalenceData,
   type 字形数据,
   type 字符数据,
+  type 新增字形数据,
   校验字库整数,
   笔画表示方式,
   结构描述字符列表,
@@ -155,7 +156,7 @@ const 字形规则: Schema = {
   ],
 };
 // 创建由服务端分配 ID；单条更新还须核对路径与请求 ID，批量更新须逐项提供 ID。
-export type 字形写入 = Omit<字形数据, "id"> & { id?: number };
+export type 字形写入 = 新增字形数据 & { id?: number };
 export const 读取字形 = 定义请求<字形写入>(字形规则, 校验字库整数);
 export const 读取字形批量创建 = 定义请求<字形写入[]>(
   数组(字形规则),

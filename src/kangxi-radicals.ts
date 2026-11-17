@@ -121,7 +121,7 @@ export const 康熙部首表: readonly 康熙部首定义[] = [
   // 广⼴
   { number: 53, name: "广", glyph_ids: [0x002a5] },
   // 廴⼵
-  { number: 54, name: "廴", glyph_ids: [0x00199] },
+  { number: 54, name: "廴", glyph_ids: [0x001a3] },
   // 廾⼶
   { number: 55, name: "廾", glyph_ids: [0x00224] },
   // 弋⼷

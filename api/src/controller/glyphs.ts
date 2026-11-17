@@ -1,8 +1,8 @@
 import {
-  创建字形ID分配器,
   type 字形数据,
   type 字符数据,
   type 结构描述字符,
+  规划新增字形ID,
   解析字形ID,
 } from "hanzi-chai";
 import type { IRequest } from "itty-router";
@@ -72,13 +72,40 @@ export async function Info(request: IRequest, env: Env) {
   return 转数据(res);
 }
 
-async function getNextId(env: Env, count = 1): Promise<number[]> {
-  const allIDs = await env.CHAI.prepare(`SELECT id FROM ${table}`).all<{
-    id: number;
-  }>();
-  const idSet = new Set(allIDs.results.map((item) => item.id));
-  const 分配 = 创建字形ID分配器(idSet);
-  return Array.from({ length: count }, () => 分配());
+async function createGlyphs(env: Env, body: 字形写入[]): Promise<number[]> {
+  if (!body.length) return [];
+  // 分配只读取本次快照；并发写入导致主键冲突时重新读取并整批分配。
+  for (let attempt = 0; ; attempt++) {
+    const { results } = await env.CHAI.prepare(
+      `SELECT * FROM ${table}`,
+    ).all<字形模型>();
+    const allocations = 规划新增字形ID(results.map(转数据), body);
+    const statement = env.CHAI.prepare(
+      `INSERT INTO ${table} (id, name, type, operator, \`references\`, strokes) VALUES (?, ?, ?, ?, ?, ?)`,
+    );
+    try {
+      await env.CHAI.batch(
+        body.map((item, index) => {
+          const { name, type, operator, references, strokes } = 转模型(item);
+          return statement.bind(
+            allocations[index]!.id,
+            name,
+            type,
+            operator,
+            references,
+            strokes,
+          );
+        }),
+      );
+      return allocations.map(({ id }) => id);
+    } catch (err) {
+      if (
+        attempt >= 2 ||
+        !String(err).includes("UNIQUE constraint failed: glyphs.id")
+      )
+        throw err;
+    }
+  }
 }
 
 /** POST:/glyphs */
@@ -86,13 +113,7 @@ export async function Create(request: IRequest, env: Env) {
   const body = await 读取字形(request);
   if (!Ok(body)) return body;
   try {
-    const { name, type, operator, references, strokes } = 转模型(body);
-    const [id] = await getNextId(env);
-    await env.CHAI.prepare(
-      `INSERT INTO ${table} (id, name, type, operator, \`references\`, strokes) VALUES (?, ?, ?, ?, ?, ?)`,
-    )
-      .bind(id, name, type, operator, references, strokes)
-      .run();
+    const [id] = await createGlyphs(env, [body]);
     return id;
   } catch (err) {
     return new Err(
@@ -107,23 +128,7 @@ export async function CreateBatch(request: IRequest, env: Env) {
   const body = await 读取字形批量创建(request);
   if (!Ok(body)) return body;
   try {
-    const statement = env.CHAI.prepare(
-      `INSERT INTO ${table} (id, name, type, operator, \`references\`, strokes) VALUES (?, ?, ?, ?, ?, ?)`,
-    );
-    const ids = await getNextId(env, body.length);
-    await env.CHAI.batch(
-      body.map((item, index) => {
-        const { name, type, operator, references, strokes } = 转模型(item);
-        return statement.bind(
-          ids[index],
-          name,
-          type,
-          operator,
-          references,
-          strokes,
-        );
-      }),
-    );
+    await createGlyphs(env, body);
   } catch (err) {
     return new Err(
       ErrCode.DataCreateFailed,

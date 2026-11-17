@@ -29,7 +29,7 @@ const 字符字形偏好列表 = [
 
 type 字符字形偏好 = (typeof 字符字形偏好列表)[number];
 
-const 隐藏可被字符唯一对应的字形元素 = atomWithStorage<字符字形偏好>(
+const 字符字形偏好原子 = atomWithStorage<字符字形偏好>(
   "字符字形偏好",
   "显示字符和不能被字符唯一对应的字形",
 );
@@ -52,14 +52,13 @@ export default function ElementPool({
   const [显示部首补充, 设置部首补充] = useAtom(使用部首补充原子);
   const [推荐相似字根, 设置推荐相似字根] = useAtom(相似字根推荐原子);
   const [隐藏旧版私用区, 设置隐藏旧版私用区] = useAtom(隐藏旧版私用区原子);
-  const [隐藏可被字符唯一对应的字形, 设置隐藏可被字符唯一对应的字形] = useAtom(
-    隐藏可被字符唯一对应的字形元素,
-  );
+  const [字符字形偏好, 设置字符字形偏好] = useAtom(字符字形偏好原子);
   const 字形字符映射 = useAtomValue(字形字符映射原子);
   let filtered = content;
   if (type === "字根") {
     filtered = content.filter((元素) => {
       if (元素 instanceof 字符) {
+        if (字符字形偏好 === "仅显示字形") return false;
         const ch = 元素 as 字符;
         if (!显示康熙部首 && ch.区块() === "kangxi") return false;
         if (!显示部首补充 && ch.区块() === "radicals-sup") return false;
@@ -76,7 +75,7 @@ export default function ElementPool({
         );
       } else if (元素 instanceof 部件 || 元素 instanceof 复合体) {
         if (元素.标准笔顺.length === 1) return false; // 不允许单笔字根
-        if (隐藏可被字符唯一对应的字形) {
+        if (字符字形偏好 === "显示字符和不能被字符唯一对应的字形") {
           const characters = 字形字符映射.get(元素.id) ?? new Set();
           const 可被字符唯一对应 = [...characters]
             .filter((x) => !x.是私用区())
@@ -121,8 +120,11 @@ export default function ElementPool({
           <Flex>
             字符字形偏好：
             <Select
-              value={隐藏可被字符唯一对应的字形}
-              onChange={(value) => 设置隐藏可被字符唯一对应的字形(value)}
+              value={字符字形偏好}
+              onChange={(value) => {
+                设置字符字形偏好(value);
+                setPage(1);
+              }}
               options={字符字形偏好列表.map((value) => ({
                 value,
                 label: value,
