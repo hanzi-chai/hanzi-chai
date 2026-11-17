@@ -6,7 +6,10 @@ import type { 字符 } from "./unicode.js";
 
 export class 字符字形过滤器 {
   private sequenceRegex: RegExp | undefined;
+  private partID: number | undefined;
   constructor(private 过滤条件: 过滤器参数) {
+    const { part } = 过滤条件;
+    this.partID = typeof part === "string" ? 解析字形ID(part) : part;
     if (过滤条件.sequence) {
       try {
         this.sequenceRegex = new RegExp(过滤条件.sequence, "u");
@@ -40,10 +43,10 @@ export class 字符字形过滤器 {
           glyph instanceof 复合体 &&
           glyph.结构描述字符 === this.过滤条件.operator;
       }
-      if (this.过滤条件.part) {
+      if (this.过滤条件.part !== undefined && this.过滤条件.part !== "") {
         subResult &&=
           glyph instanceof 复合体 &&
-          glyph.部分列表.some((p) => p.id === 解析字形ID(this.过滤条件.part!));
+          glyph.部分列表.some((p) => p.id === this.partID);
       }
       return subResult;
     });
@@ -72,10 +75,10 @@ export class 字符字形过滤器 {
     if (operator) {
       result &&= glyph instanceof 复合体 && glyph.结构描述字符 === operator;
     }
-    if (part) {
+    if (part !== undefined && part !== "") {
       result &&=
         glyph instanceof 复合体 &&
-        glyph.部分列表.some((p) => p.id === 解析字形ID(part));
+        glyph.部分列表.some((p) => p.id === this.partID);
     }
     return result;
   }
@@ -86,6 +89,6 @@ export interface 过滤器参数 {
   name?: string;
   sequence?: string;
   source?: string;
-  part?: string;
+  part?: number | string;
   operator?: 结构描述字符;
 }

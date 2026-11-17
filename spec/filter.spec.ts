@@ -64,4 +64,36 @@ describe("字符字形筛选与元数据", () => {
     expect(歧义字形.has(0x00203)).toBe(true);
     expect(歧义字形.has(1)).toBe(false);
   });
+
+  it("包含部分接受选择器返回的整数 ID，并保留十六进制文本筛选", () => {
+    const library = 构建字库(
+      fixtureConfig(),
+      [{ unicode: "三".codePointAt(0)!, glyphs: [{ id: 17, sources: ["G"] }] }],
+      [
+        { ...glyphs[0]!, id: 0 },
+        { ...glyphs[1]!, id: 16 },
+        { ...compound, id: 17, references: [{ id: 0 }, { id: 16 }] },
+      ],
+    );
+    const data = library.校验字符("三")!;
+    const value = library.获取字形(17)!;
+    for (const part of [0, 16, "00000", "00010", "字形-00010"]) {
+      const filter = new 字符字形过滤器({ part });
+      expect(filter.过滤字符(data.character, data, library)).toBe(true);
+      expect(filter.过滤字形(value, library)).toBe(true);
+    }
+    for (const part of [1, "00001", "无效 ID"]) {
+      const filter = new 字符字形过滤器({ part });
+      expect(filter.过滤字符(data.character, data, library)).toBe(false);
+      expect(filter.过滤字形(value, library)).toBe(false);
+    }
+    for (const part of [undefined, ""]) {
+      const filter = new 字符字形过滤器({ part });
+      expect(filter.过滤字符(data.character, data, library)).toBe(true);
+      expect(filter.过滤字形(value, library)).toBe(true);
+    }
+    expect(
+      new 字符字形过滤器({ part: 0 }).过滤字形(library.获取字形(16)!, library),
+    ).toBe(false);
+  });
 });
