@@ -50,6 +50,7 @@ describe("方案模板", () => {
       "xuma",
       "yustar",
       "yujoy",
+      "yuling",
       "zhangma",
       "zhengma",
       "zhenma",
