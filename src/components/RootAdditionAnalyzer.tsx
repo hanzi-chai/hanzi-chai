@@ -2,6 +2,7 @@ import {
   Alert,
   Button,
   Cascader,
+  Checkbox,
   Dropdown,
   Flex,
   Input,
@@ -777,6 +778,48 @@ const 点开提示 = ({
   >
     <span style={{ cursor: "pointer" }}>{children}</span>
   </Popover>
+);
+
+/** 轨迹里能显示的列。**默认只开四个**：动作 / 分数 / 变化 / 名次——其余默认关着，
+ *  需要时在「列展示」里点开（2026-11-17 用户要求：信息太多，做成可选、别默认堆满）。
+ *  说明走「点开提示」：点列名自己出浮层，不另加 ⓘ（与全页同一套规矩）。 */
+const 轨迹列定义: { 键: string; 名: string; 默认: boolean; 说明: ReactNode }[] = [
+  {
+    键: "动作",
+    名: "动作",
+    默认: true,
+    说明: "本轮应用的那一步：+X 加根、-X 删根，连带删掉的别名跟在后面。绿标=加根轮，红标=减根轮。",
+  },
+  { 键: "分数", 名: "分数", 默认: true, 说明: "这一步应用之后的加权总分（越小越好）。" },
+  { 键: "变化", 名: "变化", 默认: true, 说明: "相对上一步的增减：负=变好（绿），正=变差（红），0=没动。" },
+  {
+    键: "名次",
+    名: "榜单名次",
+    默认: true,
+    说明:
+      "本轮加的根，在**它进池时那一张榜**上排第几：挖=重码组挖掘、频=字频、部=字内部件、" +
+      "手=手动指定、归=归并补入（不入榜，没有名次）。" +
+      "例「挖39」= 该榜第 39 名。名次是**完整名单**里的全局序号：取池按「第几个能加的」算，" +
+      "前面早就是字根、被保护、同形的都跳过且不占名额，所以名次可以大于「根止」——" +
+      "看到「挖320」而根止只有 200，说明前 200 名里有 120 个加不进来，一路顺延到它。",
+  },
+  { 键: "前分", 名: "前分", 默认: false, 说明: "应用这一步之前的总分。打开后显示成「前分 → 分数」。" },
+  {
+    键: "根数",
+    名: "根数",
+    默认: false,
+    说明: "这一步做完后的方案根数（可删根口径：直接占键位的根；整体归并的别名不算根）。",
+  },
+  {
+    键: "动作数",
+    名: "动作数",
+    默认: false,
+    说明: "这一轮枚举并逐个评分的候选动作数。它大致就是这个轮次耗时的来源。",
+  },
+  { 键: "耗时", 名: "耗时", 默认: false, 说明: "这一轮评分花掉的秒数。" },
+];
+const 初始轨迹列: Record<string, boolean> = Object.fromEntries(
+  轨迹列定义.map((c) => [c.键, c.默认]),
 );
 
 // ==================== 页签一：手动分析 ====================
@@ -1935,6 +1978,8 @@ function 智能选根面板() {
   const [阶段, 设阶段] = useState("");
   const [进度, 设进度] = useState<{ 已评: number; 总数: number; 最优: string; 最优分: number; 变化: number | null } | null>(null);
   const [轮日志, 设轮日志] = useState<轮结果[]>([]);
+  // 轨迹列展示：纯前端偏好，不进方案配置（换方案/刷新回到默认那四列）
+  const [轨迹列, 设轨迹列] = useState<Record<string, boolean>>(初始轨迹列);
   // 抓包用：实时镜像最新轮日志与最近一轮的 mapping 快照，强杀后据此合成已选好的根
   const 轮日志引用 = useRef<轮结果[]>([]);
   const 快照引用 = useRef<Record<string, any> | null>(null);
@@ -3282,7 +3327,34 @@ function 智能选根面板() {
       )}
       {(轮日志.length > 0 || 尾部失败.length > 0) && (
         <div className="mt-2 rounded p-2 bg-gray-50">
-          <Typography.Text strong>搜索轨迹</Typography.Text>
+          <Flex align="center" justify="space-between">
+            <Typography.Text strong>搜索轨迹</Typography.Text>
+            <Popover
+              trigger="click"
+              placement="bottomRight"
+              content={
+                <div style={{ width: 240 }}>
+                  <Flex align="center" justify="space-between" className="mb-1">
+                    <Typography.Text strong>列展示</Typography.Text>
+                    <Typography.Link onClick={() => 设轨迹列(初始轨迹列)}>重置</Typography.Link>
+                  </Flex>
+                  {轨迹列定义.map((c) => (
+                    <div key={c.键} className="flex items-center gap-2 leading-6">
+                      <Checkbox
+                        checked={!!轨迹列[c.键]}
+                        onChange={(e) =>
+                          设轨迹列((x) => ({ ...x, [c.键]: e.target.checked }))
+                        }
+                      />
+                      <点开提示 内容={c.说明}>{c.名}</点开提示>
+                    </div>
+                  ))}
+                </div>
+              }
+            >
+              <Typography.Link>列展示</Typography.Link>
+            </Popover>
+          </Flex>
           {/* 轨迹不封顶：日志多少就多高，靠整页那一个滚动条看，不再套一层内部滚轮 */}
           <div>
             {轮日志.map((r, i) => (
@@ -3293,16 +3365,58 @@ function 智能选根面板() {
                     <Typography.Text type="warning">{富文本(t)}</Typography.Text>
                   </div>
                 ))}
-                {r.轮 === 0 ? "第0轮" : `第${r.轮}轮`} <Tag color={r.轮 === 0 ? "blue" : (r.动作.startsWith("-") ? "red" : "green")}>{富文本(r.动作)}</Tag>
-                {r.前分} → {r.分数}（
-                {/* 绿减红加，0 = 没变好也不坏 → 无色（与差异分析那边同一口径） */}
-                <Typography.Text
-                  type={r.变化 < 0 ? "success" : r.变化 > 0 ? "danger" : undefined}
-                >
-                  {r.变化 > 0 ? "+" : ""}
-                  {r.变化}
-                </Typography.Text>
-                ，根 {r.根数}，{r.动作数} 动作 / {r.耗时.toFixed(1)}s）
+                {(() => {
+                  const 段: ReactNode[] = [];
+                  const 推 = (键: string, 节点: ReactNode) => {
+                    if (段.length)
+                      段.push(
+                        <span key={`分${键}`} className="opacity-40">
+                          {" · "}
+                        </span>,
+                      );
+                    段.push(<span key={键}>{节点}</span>);
+                  };
+                  // 动作：Tag 自带颜色，轮号跟在前面
+                  段.push(
+                    <span key="轮号" className="mr-1 text-xs opacity-70">
+                      {r.轮 === 0 ? "第0轮" : `第${r.轮}轮`}
+                    </span>,
+                  );
+                  if (轨迹列.动作)
+                    段.push(
+                      <Tag
+                        key="动作"
+                        color={r.轮 === 0 ? "blue" : r.动作.startsWith("-") ? "red" : "green"}
+                      >
+                        {富文本(r.动作)}
+                      </Tag>,
+                    );
+                  if (轨迹列.前分) 推("前分", r.前分);
+                  if (轨迹列.分数) 推("分数", r.分数);
+                  if (轨迹列.变化)
+                    推(
+                      "变化",
+                      // 绿减红加，0 = 没变好也不坏 → 无色（与差异分析那边同一口径）
+                      <Typography.Text
+                        type={r.变化 < 0 ? "success" : r.变化 > 0 ? "danger" : undefined}
+                      >
+                        {r.变化 > 0 ? "+" : ""}
+                        {r.变化}
+                      </Typography.Text>,
+                    );
+                  // 榜单名次：挖39 / 频12 / 部88 / 手3 / 归（归并没有名次）/ —（不在任何榜里）
+                  if (轨迹列.名次 && r.加根名次?.length)
+                    推(
+                      "名次",
+                      r.加根名次
+                        .map((x) => `${x.榜 === "—" ? "" : x.榜}${x.位 ?? ""}`)
+                        .join("、"),
+                    );
+                  if (轨迹列.根数) 推("根数", `根 ${r.根数}`);
+                  if (轨迹列.动作数) 推("动作数", `${r.动作数} 动作`);
+                  if (轨迹列.耗时) 推("耗时", `${r.耗时.toFixed(1)}s`);
+                  return <div className="leading-6">{段}</div>;
+                })()}
                 {r.单加明细 && (
                   <div className="ml-2 text-xs text-gray-500 leading-5">
                     {r.单加明细.map((x) => (
