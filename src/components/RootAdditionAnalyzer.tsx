@@ -3381,10 +3381,12 @@ function 智能选根面板() {
                       );
                     段.push(<span key={键}>{节点}</span>);
                   };
-                  // 动作：Tag 自带颜色，轮号跟在前面
+                  // 轮号：和改列之前一模一样——正文大小、正常颜色，后面跟一个空格再是动作标签
+                  // （2026-11-17 用户："第x轮的样式你改了吗，怎么看起来不一样了"：
+                  //   之前错加了 text-xs / opacity-70，把它做小了；这里不挂任何样式类）
                   段.push(
-                    <span key="轮号" className="mr-1 text-xs opacity-70">
-                      {r.轮 === 0 ? "第0轮" : `第${r.轮}轮`}
+                    <span key="轮号">
+                      {r.轮 === 0 ? "第0轮" : `第${r.轮}轮`}{" "}
                     </span>,
                   );
                   if (轨迹列.动作)
@@ -3431,7 +3433,7 @@ function 智能选根面板() {
                   if (轨迹列.根数) 推("根数", `根 ${r.根数}`);
                   if (轨迹列.动作数) 推("动作数", `${r.动作数} 动作`);
                   if (轨迹列.耗时) 推("耗时", `${r.耗时.toFixed(1)}s`);
-                  return <div className="leading-6">{段}</div>;
+                  return <div>{段}</div>;
                 })()}
                 {r.单加明细 && (
                   <div className="ml-2 text-xs text-gray-500 leading-5">
