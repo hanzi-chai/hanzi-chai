@@ -44,6 +44,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  type FocusEvent,
   useState,
   type ReactNode,
 } from "react";
@@ -315,6 +316,8 @@ function 数字框({
   设值,
   回填,
   后缀,
+  min,
+  max,
   ...其余
 }: {
   值: number;
@@ -328,14 +331,32 @@ function 数字框({
   useEffect(() => {
     设草稿(值);
   }, [值]);
-  const 提交 = () => {
-    const 最终 = 草稿 ?? 回填;
+  /** 越界一律夹回 [min, max]。
+   *  antd 的 InputNumber 在**打字期间**对越界值是**不回调 onChange 的**
+   *  （`rc-input-number/lib/InputNumber.js:259`：`isRangeValidate = isInRange(v) || v.isEmpty()`，
+   *  越界且非空 → 整个回调被跳过；只有失焦时 `flushInputValue(false)` 才夹一次并回调）。
+   *  所以「2 → 打 -1 → 失焦」这条路径里，草稿从头到尾都是 2：读草稿只会读到 2，
+   *  而我们又不设值，显示却被 antd 自己夹成 1 —— 就是「显示 1、实际还是 2」（2026-11-17 用户报）。
+   *  真正的值只剩输入框里的**文本**可靠，所以失焦时读 DOM 文本，读不到/不是数才退回草稿。 */
+  const 收拢 = (v: number) => {
+    let x = v;
+    if (typeof min === "number" && x < min) x = min;
+    if (typeof max === "number" && x > max) x = max;
+    return x;
+  };
+  const 提交 = (e?: FocusEvent<HTMLInputElement>) => {
+    const 原文 = (e?.target as HTMLInputElement | undefined)?.value?.trim() ?? "";
+    const 读数 = 原文 === "" ? null : Number(原文);
+    const 候选 = 读数 == null || !Number.isFinite(读数) ? (草稿 ?? 回填) : 读数;
+    const 最终 = 收拢(候选);
     设草稿(最终);
     if (最终 !== 值) 设值(最终);
   };
   return (
     <InputNumber
       {...其余}
+      min={min}
+      max={max}
       value={草稿}
       suffix={后缀?.(草稿)}
       onChange={设草稿}
