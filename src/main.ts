@@ -51,7 +51,7 @@ export * from "./equivalence.js";
 export * from "./evaluation.js";
 export * from "./explain.js";
 export * from "./filter.js";
-export { 默认融合字形 } from "./fusion.js";
+export { 获取融合字形集合, 默认融合字形 } from "./fusion.js";
 export * from "./glyph-id.js";
 export * from "./glyph-id-allocation.js";
 export * from "./glyph-metadata.js";

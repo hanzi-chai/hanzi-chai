@@ -12,8 +12,8 @@ import {
   字符字形过滤器,
   是用户字形,
   格式化字形ID,
-  歧义字形,
   结构描述字符列表,
+  获取融合字形集合,
   type 过滤器参数,
   type 部件,
 } from "hanzi-chai";
@@ -22,10 +22,12 @@ import { type ReactElement, useMemo, useState } from "react";
 import { createGlyph, removeGlyph, replaceGlyph, updateGlyph } from "~/api";
 import {
   下一个用户字形ID原子,
+  分析配置原子,
   可编辑字形列表原子,
   可编辑字符列表原子,
   字库原子,
   字形字符映射原子,
+  数据配置原子,
   用户字形列表原子,
   统一字形列表原子,
   远程原子,
@@ -221,6 +223,9 @@ export default function GlyphTable() {
   const [filter, setFilter] = useState<过滤器参数>({});
   const 字形字符映射 = useAtomValue(字形字符映射原子);
   const 远程 = useAtomValue(远程原子);
+  const 分析配置 = useAtomValue(分析配置原子);
+  const [数据配置, 设置数据配置] = useAtom(数据配置原子);
+  const 融合字形集合 = 获取融合字形集合(分析配置, 数据配置);
 
   const dataSource = useMemo(() => {
     const 过滤器 = new 字符字形过滤器(filter);
@@ -356,16 +361,30 @@ export default function GlyphTable() {
       },
     },
     {
-      title: "歧义",
-      key: "ambiguous",
-      render: (_, record) => {
-        return <Checkbox checked={歧义字形.has(record.id)} />;
-      },
+      title: "融合",
+      key: "fusion",
+      render: (_, record) => (
+        <Checkbox
+          aria-label={`融合字形 ${格式化字形ID(record.id)}`}
+          checked={!是部件(record) && 融合字形集合.has(record.id)}
+          disabled={是部件(record)}
+          onChange={(event) => {
+            const checked = event.target.checked;
+            设置数据配置((当前配置) => {
+              const fusion = new Set(获取融合字形集合(分析配置, 当前配置));
+              if (checked) fusion.add(record.id);
+              else fusion.delete(record.id);
+              return { ...当前配置, fusion: [...fusion] };
+            });
+          }}
+        />
+      ),
       filters: [
-        { text: "只看有歧义", value: 1 },
-        { text: "只看无歧义", value: 0 },
+        { text: "只看已融合", value: 1 },
+        { text: "只看未融合", value: 0 },
       ],
-      onFilter: (value, record) => Number(歧义字形.has(record.id)) === value,
+      onFilter: (value, record) =>
+        Number(!是部件(record) && 融合字形集合.has(record.id)) === value,
       width: 64,
     },
     {
@@ -394,6 +413,8 @@ export default function GlyphTable() {
     columns = columns.filter(
       (col) => col.title !== "GF0014" && col.title !== "GF3001",
     );
+  } else {
+    columns = columns.filter((col) => col.key !== "fusion");
   }
 
   return (

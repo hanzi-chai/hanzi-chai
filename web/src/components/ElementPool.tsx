@@ -9,7 +9,14 @@ import {
   Select,
   Typography,
 } from "antd";
-import { type 元素, 复合体, 字符, 字符字形过滤器, 部件 } from "hanzi-chai";
+import {
+  type 元素,
+  复合体,
+  字符,
+  字符字形过滤器,
+  解析字形ID,
+  部件,
+} from "hanzi-chai";
 import { atomWithStorage } from "jotai/utils";
 import { useState } from "react";
 import { useAtom, useAtomValue, 字库原子, 字形字符映射原子 } from "~/atoms";
@@ -48,6 +55,12 @@ export default function ElementPool({
   const [isOpen, setOpen] = useState(false);
   const 笔顺过滤 = new 字符字形过滤器({ sequence: input });
   const 直接过滤 = new 字符字形过滤器({ name: input });
+  const 搜索文本 = input.trim();
+  const 搜索字形ID = /^(?:(?:字形-|0x)[0-9a-f]{1,5}|[0-9a-f]{5})$/i.test(
+    搜索文本,
+  )
+    ? 解析字形ID(搜索文本)
+    : undefined;
   const [显示康熙部首, 设置康熙部首] = useAtom(使用康熙部首原子);
   const [显示部首补充, 设置部首补充] = useAtom(使用部首补充原子);
   const [推荐相似字根, 设置推荐相似字根] = useAtom(相似字根推荐原子);
@@ -75,6 +88,8 @@ export default function ElementPool({
         );
       } else if (元素 instanceof 部件 || 元素 instanceof 复合体) {
         if (元素.标准笔顺.length === 1) return false; // 不允许单笔字根
+        // 明确指定 ID 时显示该字形，即使它可被字符唯一对应。
+        if (元素.id === 搜索字形ID) return true;
         if (字符字形偏好 === "显示字符和不能被字符唯一对应的字形") {
           const characters = 字形字符映射.get(元素.id) ?? new Set();
           const 可被字符唯一对应 = [...characters]
@@ -132,9 +147,10 @@ export default function ElementPool({
             />
           </Flex>
           <Input
-            placeholder="输入笔画（12345）或汉字搜索"
+            placeholder="输入笔画（12345）、汉字或字形 ID 搜索"
             onChange={(event) => {
               setInput(event.target.value);
+              setPage(1);
             }}
             prefix={<SearchOutlined />}
           />
