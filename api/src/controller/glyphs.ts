@@ -1,6 +1,7 @@
 import {
   type 字形数据,
   type 字符数据,
+  type 矢量图形数据,
   type 结构描述字符,
   规划新增字形ID,
   解析字形ID,
@@ -57,6 +58,16 @@ export async function List(_request: Request, env: Env) {
     `SELECT * FROM ${table}`,
   ).all<字形模型>();
   return results.map(转数据);
+}
+
+/** GET:/enclosure-outlines */
+export async function ListEnclosureOutlines(_request: Request, env: Env) {
+  const { results } = await env.CHAI.prepare(
+    "SELECT id, strokes FROM enclosure_outlines",
+  ).all<{ id: number; strokes: string }>();
+  return Object.fromEntries(
+    results.map(({ id, strokes }) => [id, JSON.parse(strokes) as 矢量图形数据]),
+  );
 }
 
 /** GET:/glyphs/:id */

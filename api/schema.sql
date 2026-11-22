@@ -22,6 +22,11 @@ CREATE TABLE IF NOT EXISTS glyphs (
   `strokes` TEXT
 );
 
+CREATE TABLE IF NOT EXISTS enclosure_outlines (
+  `id` INTEGER PRIMARY KEY,
+  `strokes` TEXT NOT NULL CHECK (json_type(strokes) = 'array')
+);
+
 CREATE TABLE IF NOT EXISTS users (
   `id` TEXT NOT NULL DEFAULT "" PRIMARY KEY,
   `name` TEXT NOT NULL DEFAULT "",

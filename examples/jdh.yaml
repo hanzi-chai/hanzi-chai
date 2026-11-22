@@ -6,6 +6,12 @@ info:
   version: '5.0'
   description: 方案不简单做给谁看呢
 data:
+  glyph_algebra:
+    # 本方案在这些包围结构中按外框的分部取根。
+    - from: {operator: ⿺, references: [0x2032d, {variable: 1}]}
+      to: {operator: ⿺, references: [{operator: ⿱, references: [0x0020e, 0x00359]}, {variable: 1}]}
+    - from: {operator: ⿸, references: [0x35714, {variable: 1}]}
+      to: {operator: ⿸, references: [{operator: ⿸, references: [0x002a5, 0x4b315]}, {variable: 1}]}
   character_customization:
     黄: [{type: insert, id: 983042, sources: []}]
     高: [{type: insert, id: 983043, sources: []}]
@@ -61,6 +67,8 @@ analysis:
     - 能散不连
     - 取大优先
   customize:
+    # 按码表核定个别整字的取根。
+    字形-1e614: ["1", "口", "1", "5", "3", "3", "3", "4"] # 彧
     击:
       - 土
       - 山

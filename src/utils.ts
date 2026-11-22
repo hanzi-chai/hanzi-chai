@@ -44,7 +44,7 @@ import {
   结构符元素,
   type 自定义元素,
 } from "./element.js";
-import { 获取包围内部范围 } from "./enclosure.js";
+import { 获取包围内部范围, 获取包围外框笔画 } from "./enclosure.js";
 import { 获取分析部件, 获取融合字形集合 } from "./fusion.js";
 import { 解析字形ID } from "./glyph-id.js";
 import { 复杂度布局 } from "./layout.js";
@@ -1077,9 +1077,11 @@ export function 仿射合并(
     const 变换 = new 仿射变换(xInterval, yInterval);
     变换列表.push(变换);
   }
-  const 变换后图形列表 = 部分列表.map((part, index) =>
-    变换列表[index]!.变换笔画列表(part.获取笔画列表()),
-  );
+  const 外框笔画 = 获取包围外框笔画(references[0], operator);
+  const 变换后图形列表 = 部分列表.map((part, index) => {
+    const 笔画 = (index === 0 && 外框笔画) || part.获取笔画列表();
+    return 变换列表[index]!.变换笔画列表(笔画);
+  });
   const 启用贴合 =
     主轴 !== undefined &&
     references.some(

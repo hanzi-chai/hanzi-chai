@@ -10,7 +10,7 @@ import { 迁移旧字形ID } from "./migrations/glyph-id-legacy.js";
 
 export { 迁移旧字形ID } from "./migrations/glyph-id-legacy.js";
 
-/** 线上完成数据库切换前，下载器仍能把旧编号快照转为新编号。 */
+/** 将离线历史字库快照转换为现行字形编号。 */
 export function 迁移旧字库(glyphs: 字形数据[], characters: 字符数据[]) {
   // 00000 是冻结快照中的第一笔横；旧库的最小 ID 为 1。
   if (glyphs.some((字形) => 字形.id === 0)) return { glyphs, characters };

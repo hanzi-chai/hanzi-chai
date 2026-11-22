@@ -1,7 +1,7 @@
 import { 仿射变换, 图形盒子 } from "./affine.js";
 import { 默认分类器 } from "./classifier.js";
 import type { 字形数据, 引用笔画块数据, 矢量笔画数据 } from "./data.js";
-import { 获取包围内部范围 } from "./enclosure.js";
+import { 获取包围内部范围, 获取包围外框笔画 } from "./enclosure.js";
 import {
   创建部首反查表,
   type 康熙部首定义,
@@ -86,7 +86,12 @@ export class 字形归部检索 {
     }
     const 左界 = 引用.xbegin ?? xb;
     const 右界 = 引用.xend ?? xe;
-    const [原左界, 原右界] = this.获取图形(引用.id).横向区间.toArray();
+    const 外框笔画 =
+      index === 0 ? 获取包围外框笔画(引用, 父字形.operator) : undefined;
+    const 图形 = 外框笔画
+      ? 图形盒子.从笔画列表构建(外框笔画)
+      : this.获取图形(引用.id);
+    const [原左界, 原右界] = 图形.横向区间.toArray();
     return 左界 + ((原左界 + 原右界) / 200) * (右界 - 左界);
   }
 

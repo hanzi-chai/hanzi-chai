@@ -36,12 +36,14 @@ analysis:
     - 少弱字根
     - 取大优先
   customize:
+    # 按码表核定个别整字的取根。
+    字形-1c713: ["丷", "王", "儿", "厶"] # 羗
+    字形-27304: ["", "儿", "子"] # 觃
+    字形-56f4a: ["广", "木", "木", "非", "灬"] # 爢
+    字形-f0076: ["亠", "亻", "夊", "4"] # 夜
+    字形-f00f0: ["亠", "亻", "夊", "4", "鳥"] # 鵺
     # 両的冂和山候选已存在，沿用星陈取根。
     字形-0051b: ['1', 冂, 山]
-    # 包围外框与整字按同一个字根取码。
-    字形-02629: [門]
-    字形-0476b: [風]
-    字形-04769: [風]
     # 台标華字底已有一、艹、奉下的切片。
     字形-00700: ['1', 艹, ]
     # 為的兼容形仍按官方拆分取首点和爲下。
@@ -164,8 +166,6 @@ form:
     爿: dq
     臼: di
     鬼: dg
-    字形-1c60d: {element: 鬼}
-    字形-1c707: {element: 鬼}
     甶: dg
     向: dx
     戶: dh
@@ -215,7 +215,6 @@ form:
     士: hs
     龶: hs
     走: hz
-    字形-2032e: {element: 走}
     壴: hz
     亍: ic
     二: ir
@@ -241,8 +240,6 @@ form:
     目: jm
     且: jq
     見: jj
-    # 覎、覐等宿主的見形包围外框也作为普通字根登记。
-    字形-6d10f: {element: 見}
     貝: jb
     頁: je
     缶: jf
@@ -281,15 +278,10 @@ form:
     壬: mr
     夭: my
     麻: ma
-    字形-35715: {element: 麻}
-    字形-3571a: {element: 麻}
     疒: mb
     广: mg
     鹿: ml
-    字形-5160c: {element: 鹿}
-    字形-5160a: {element: 鹿}
     辰: mc
-    字形-1b406: {element: 辰}
     干: ng
     甫: nf
     厶: na
@@ -361,8 +353,6 @@ form:
     山: us
     卜: ub
     虎: uh
-    字形-02614: {element: 虎}
-    字形-02615: {element: 虎}
     鹵: ul
     瓜: ug
     爪: uz
@@ -792,7 +782,6 @@ form:
     字形-f0053: {element: }
     字形-f0054: {element: 豕}
     字形-00710: {element: 雨}
-    字形-0029e: {element: 夊}
     字形-f0057: {element: 千}
     字形-f0058: {element: 黑}
     字形-f005a: {element: }
@@ -1294,7 +1283,7 @@ data:
     - {id: 0xf00fe, type: compound, operator: ⿰, references: [{id: 0x003d9}, {id: 0xf00fc}], name: 熚·畢兼容拆分}
     - {id: 0xf00ff, type: compound, operator: ⿰, references: [{id: 0x004b9}, {id: 0xf00fc}], name: 襅·畢兼容拆分}
     - {id: 0xf0100, type: compound, operator: ⿰, references: [{id: 0x04662}, {id: 0xf00fc}], name: 饆·畢兼容拆分}
-    - {id: 0xf0101, type: compound, operator: ⿺, references: [{id: 0x1c60d}, {id: 0xf00fc}], name: 魓·畢兼容拆分}
+    - {id: 0xf0101, type: compound, operator: ⿺, references: [{id: 0x1c60c}, {id: 0xf00fc}], name: 魓·畢兼容拆分}
     # 跨分部的穴、京上：重组原复合体，复用已有完整分部。
     - {id: 0xd7853, type: compound, operator: ⿳, references: [{id: 0x28104}, {id: 0x00197}, {id: 0x0032b}]}
     - {id: 0x08a2a, type: compound, operator: ⿳, references: [{id: 0x0820a}, {id: 0xd7003}, {id: 0x003bd}]}
@@ -1707,9 +1696,6 @@ data:
       to: {operator: ⿱, references: [0xf0091, {variable: 1}]}
     - from: 0x12646
       to: {operator: ⿱, references: [0xf0092, 0x00227]}
-    # 克作为包围外框时仍取古、儿。
-    - from: 0x1840c
-      to: {operator: ⿱, references: [0x18207, 0x00165]}
     # 羲字底先取原部件 #1060 的禾、戈无横，再取丂。
     - from: 0x0481d
       to: {operator: ⿹, references: [0x0071b, 0x00118]}

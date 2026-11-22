@@ -49,6 +49,10 @@ analysis:
     - 非形近根
     - 取大优先
   customize:
+    # 按码表核定个别整字的取根。
+    字形-3b50a: ["亠", "䒑", "3", "彡"] # 彦
+    字形-7c507: ["", "丆", "9", "习", "习"] # 翘
+    字形-8e200: ["丆", "9", "虫"] # 虺
     无:
       - '1'
       - 尢
@@ -735,6 +739,14 @@ encoder:
       positive: s14
       negative: s15
 data:
+  glyph_algebra:
+    # 本方案在这些包围结构中按外框的分部取根。
+    - from: {operator: ⿺, references: [0x2032d, {variable: 1}]}
+      to: {operator: ⿺, references: [{operator: ⿱, references: [0x0020e, 0x00359]}, {variable: 1}]}
+    - from: {operator: ⿸, references: [0x5160b, {variable: 1}]}
+      to: {operator: ⿸, references: [{operator: ⿸, references: [0x0064e, 0x15104]}, {variable: 1}]}
+    - from: {operator: ⿺, references: [0x1c60c, {variable: 1}]}
+      to: {operator: ⿺, references: [{operator: ⿺, references: [0x00641, 0x00197]}, {variable: 1}]}
   character_set: gb2312
 
   character_customization:

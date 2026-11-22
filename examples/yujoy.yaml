@@ -35,6 +35,32 @@ analysis:
     - 少弱字根
     - 取大优先
   customize:
+    # 按码表核定个别整字的取根。
+    字形-01c71: ["臼", "6", "", "6", "", "6", "1"] # 𫜢
+    字形-0994a: ["亻", "1", "尸", "亠", ""] # 𲑂
+    字形-14602: ["", "", "", "口"] # 𫌩
+    字形-27304: ["", "", "孑"] # 觃
+    字形-3281b: ["巾", "1", "尸", ""] # 𱜯
+    字形-3c720: ["彳", "1", "尸", "犬"] # 𱝲
+    字形-3da6c: ["忄", "厂", "1", "尸", ""] # 𭞒
+    字形-45305: ["", "", "斤"] # 𲁒
+    字形-57802: ["1", "尸", "", "爪"] # 𭶳
+    字形-86a12: ["臼", "6", "", "6", "", "6", "", "3"] # 𲎝
+    字形-86a13: ["臼", "6", "", "6", "", "6", "丑"] # 𮮬
+    字形-86b13: ["臼", "6", "", "6", "", "6", "", "4", "龴"] # 𪕌
+    字形-86b17: ["臼", "6", "", "6", "", "6", "", "工"] # 𬹭
+    字形-86c0b: ["臼", "6", "", "6", "", "6", "夕", "夕"] # 𳑙
+    字形-86d06: ["臼", "6", "", "6", "", "6", "", "3", "口"] # 𲎞
+    字形-86e07: ["臼", "6", "", "6", "", "6", "日", "木"] # 𬹮
+    字形-86e08: ["臼", "6", "", "6", "", "6", "立", "口"] # 𮮮
+    字形-86f1d: ["臼", "6", "", "6", "", "6", "口", "口", "日", "十"] # 𮮯
+    字形-86f20: ["臼", "6", "", "6", "", "6", "予", "3", "木"] # 𲎟
+    字形-8c7f6: ["卄", "見", "4"] # 萈
+    字形-9330c: ["", "", "见"] # 𲁓
+    字形-a7b79: ["金", "1", "尸", "雨"] # 𮣀
+    字形-b7c01: ["臼", "6", "", "6", "", "6", "飛"] # 𳑤
+    字形-c4767: ["鳥", "1", "尸", "犬"] # 𮭂
+    字形-d7390: ["尸", "口", "1", "尸", "又"] # 𡲠
     戋:
       - '1'
       - 戈
@@ -860,6 +886,36 @@ encoder:
     - length_in_range: [4, 10]
       formula: AaBaCaZa
 data:
+  glyph_algebra:
+    # 本方案在这些包围结构中按外框的分部取根。
+    - from: {operator: ⿵, references: [0x02627, {variable: 1}]}
+      to: {operator: ⿵, references: [{operator: ⿰, references: [0x00369, 0x0036c]}, {variable: 1}]}
+    - from: {operator: ⿺, references: [0x2032d, {variable: 1}]}
+      to: {operator: ⿺, references: [{operator: ⿱, references: [0x0020e, 0x00359]}, {variable: 1}]}
+    - from: {operator: ⿺, references: [0x10614, {variable: 1}]}
+      to: {operator: ⿺, references: [{operator: ⿵, references: [0x0014d, 0x00643]}, {variable: 1}]}
+    - from: {operator: ⿺, references: [0x10611, {variable: 1}]}
+      to: {operator: ⿺, references: [{operator: ⿵, references: [0x0014d, 0x00613]}, {variable: 1}]}
+    - from: {operator: ⿸, references: [0x5160b, {variable: 1}]}
+      to: {operator: ⿸, references: [{operator: ⿸, references: [0x0064e, 0x15104]}, {variable: 1}]}
+    - from: {operator: ⿸, references: [0x51609, {variable: 1}]}
+      to: {operator: ⿸, references: [{operator: ⿸, references: [0x0064e, 0x15102]}, {variable: 1}]}
+    - from: {operator: ⿸, references: [0x35714, {variable: 1}]}
+      to: {operator: ⿸, references: [{operator: ⿸, references: [0x002a5, 0x4b315]}, {variable: 1}]}
+    - from: {operator: ⿸, references: [0x35719, {variable: 1}]}
+      to: {operator: ⿸, references: [{operator: ⿸, references: [0x002a5, 0x0164e]}, {variable: 1}]}
+    - from: {operator: ⿺, references: [0x1c60c, {variable: 1}]}
+      to: {operator: ⿺, references: [{operator: ⿺, references: [0x00641, 0x00197]}, {variable: 1}]}
+    - from: {operator: ⿺, references: [0x1c706, {variable: 1}]}
+      to: {operator: ⿺, references: [{operator: ⿺, references: [0x0a505, 0x00197]}, {variable: 1}]}
+    - from: {operator: ⿸, references: [0x1b405, {variable: 1}]}
+      to: {operator: ⿸, references: [{operator: ⿸, references: [0x0010a, 0x07212]}, {variable: 1}]}
+    - from: {operator: {variable: 0, opearator_set: [⿷, ⿺]}, references: [0x6d10c, {variable: 1}]}
+      to: {operator: {variable: 0}, references: [{operator: ⿱, references: [0x00451, 0x0014f]}, {variable: 1}]}
+    - from: {operator: {variable: 0, opearator_set: [⿷, ⿸, ⿺]}, references: [0x8d105, {variable: 1}]}
+      to: {operator: {variable: 0}, references: [{operator: ⿸, references: [0x1930b, 0x00151]}, {variable: 1}]}
+    - from: {operator: ⿺, references: [0x8d107, {variable: 1}]}
+      to: {operator: ⿺, references: [{operator: ⿸, references: [0x1930b, 0x0014f]}, {variable: 1}]}
   character_set: extended
 
   character_customization:

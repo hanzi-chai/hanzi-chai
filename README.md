@@ -26,7 +26,7 @@ npx chai evaluate ./scheme.yaml --out ./runs/baseline --json
 
 ## 默认数据与文件覆盖
 
-源码 CLI 默认使用 `data/`，构建或安装后使用包内的 `dist/data/`。包内仅包含下表的五份运行数据。示例源文件维护在本包的 `examples/`，构建后复制到 `dist/examples/`，无需依赖仓库根目录的资源。运行 `chai --help` 可以查看当前 CLI 的实际路径。直接传方案 YAML 即可共用这套数据。
+下表的五份运行数据由源码 CLI 从 `data/` 读取，构建或安装后从包内的 `dist/data/` 读取。算法使用的包围轮廓快照随包发布在 `data/enclosure-outlines.json`。示例源文件维护在本包的 `examples/`，构建后复制到 `dist/examples/`。运行 `chai --help` 可以查看当前 CLI 的实际路径。直接传方案 YAML 即可共用这套数据。
 
 | 参数 | 默认文件或用途 |
 | --- | --- |
@@ -332,11 +332,11 @@ npm run build
 npm run check:package
 ```
 
-`fetch:data` 严格下载并校验五份必需数据，全部成功后才写入。维护者也可预先放入完整的本地数据；构建检查格式，允许直接替换同名文件，不使用压缩格式或分发哈希清单。
+`fetch:data` 严格下载并校验六份必需数据，全部成功后才写入。包围轮廓从数据库的 `GET /enclosure-outlines` 接口下载，网页构建时随算法打包。维护者也可预先放入完整的本地数据；构建检查格式，允许直接替换同名文件，不使用压缩格式或分发哈希清单。
 
 网页使用固定的 `/data/<文件名>` 地址，加载时不使用浏览器缓存。Cloudflare Pages 部署通过 `web/public/_headers` 为数据设置 `Cache-Control: no-store`；HTTP 压缩由托管平台处理。数据重新部署后在刷新页面时生效，已打开的编辑会话继续使用加载完成的数据。
 
-`prepack` 会执行构建，并按白名单复制五份数据和示例 YAML；旧资源目录会先清理。发布工作流在干净环境中准备数据，构建后通过真实 tarball 安装到仓库外的新目录，检查资源范围、Node API、CLI、默认数据加载和示例评估，再执行发布。`check:package` 验证已有构建产物；其安装步骤需要访问 npm registry，安装后运行检查无需访问数据服务器。
+`prepack` 会执行构建，并按白名单整理运行数据和示例 YAML；旧资源目录会先清理。发布工作流在干净环境中准备数据，构建后通过真实 tarball 安装到仓库外的新目录，检查资源范围、Node API、CLI、默认数据加载和示例评估，再执行发布。`check:package` 验证已有构建产物；其安装步骤需要访问 npm registry，安装后运行检查无需访问数据服务器。
 
 ## 验证
 

@@ -1,4 +1,5 @@
 import type { 复合体数据, 字形数据, 部件数据 } from "./data.js";
+import { 包围变形字形ID } from "./enclosure.js";
 import {
   type 字形溢出信息,
   字形溢出表,
@@ -18,6 +19,7 @@ export interface 字形ID分配结果 extends 字形编号分组 {
 
 const 分组键 = (信息: Pick<字形编号分组, "radical_number" | "stroke_bucket">) =>
   信息.radical_number * 16 + 信息.stroke_bucket;
+const 已退役编号 = new Set(包围变形字形ID);
 
 function 编号状态(字形列表: readonly 字形数据[], 检索: 字形归部检索) {
   const 下个序号 = new Map<number, number>();
@@ -94,8 +96,10 @@ export function 规划新增字形ID(
   const 结果: 字形ID分配结果[] = [];
   for (const { index, ...信息 } of 待分配) {
     const 组 = 分组键(信息);
-    const ordinal = 状态.下个序号.get(组) ?? 0;
+    let ordinal = 状态.下个序号.get(组) ?? 0;
+    while (ordinal < 256 && 已退役编号.has(组 * 256 + ordinal)) ordinal++;
     const overflow = ordinal >= 256;
+    if (overflow) while (已退役编号.has(状态.溢出ID)) 状态.溢出ID++;
     if (overflow && 状态.溢出ID > 溢出字形终点)
       throw new Error("字形 ID 溢出区已满");
     const id = overflow ? 状态.溢出ID++ : 组 * 256 + ordinal;

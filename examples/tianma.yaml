@@ -56,6 +56,7 @@ analysis:
     - 连续笔顺
     - 取大优先
   customize:
+    字形-27304: ["\ue439", 儿, 子] # 觃按见的两个分部及子取根
     曲:
       - 日
       - "\ue001"
@@ -224,10 +225,6 @@ analysis:
     互:
       - '1'
       - 彑
-    乘:
-      - 禾
-      - "\ue012"
-      - 匕
     兼:
       - 䒑
       - "\ue0a6"
@@ -853,23 +850,8 @@ form:
       element: "\ue277"
     字形-0341c:
       element: "\ue042"
-    # 新字库中包围外框使用独立 ID，沿用相应整字根的键位。
-    字形-02629:
-      element: "\ue28a"
-    字形-35715:
-      element: 麻
-    字形-1b406:
-      element: 辰
-    字形-35716:
-      element: 麻
     字形-00284:
       element: 亼
-    字形-5160c:
-      element: 鹿
-    字形-2032e:
-      element: 走
-    字形-1c60d:
-      element: 鬼
     字形-0011d:
       element: 匕
   mapping_type: 2
@@ -987,8 +969,6 @@ data:
     - 0x3a51d
     - 0x12746
     - 0x0884d
-    - 0x02429
-    - 0x1840c
     - 0x0341c
     - 0x019b2
     - 0x0831f
@@ -1010,7 +990,6 @@ data:
     - 0x2032d
     - 0x1c60c
     - 0x0064b
-    - 0x1b406
     - 0x03420
   character_set: general
   characters:

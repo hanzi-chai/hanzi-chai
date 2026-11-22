@@ -16,7 +16,8 @@
     "./examples/*.yaml": "./dist/examples/*.yaml"
   },
   "files": [
-    "dist"
+    "dist",
+    "data/enclosure-outlines.json"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json && bun scripts/copy-assets.ts",

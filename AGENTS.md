@@ -29,7 +29,7 @@ hanzi-chai/
 ```bash
 bun install --frozen-lockfile
 bun run fetch               # 首次准备共享数据；已有可用数据时无需重复下载
-bun run fetch:data          # 只准备五份 npm 包运行数据
+bun run fetch:data          # 准备 npm 包运行数据
 bun run chai --help
 bun run chai validate ./scheme.yaml --json
 bun run chai evaluate ./scheme.yaml --out ./output/baseline --json
@@ -64,11 +64,11 @@ bun run check:package       # 将真实 tarball 安装至仓库外验证
 
 ## 数据准备与发布资源
 
-共享开发数据只保存于 `data/`。`scripts/fetch.ts` 复用 `scripts/fetch-data.ts` 的严格下载流程，并补充网页和开发核验资源。核心五份文件为 `characters.json`、`glyphs.json`、`dictionary.txt`、`distribution.txt`、`equivalence.txt`，下载或格式校验失败必须终止，全部成功后才写入。额外资源包括 `gf0014.txt`、`cjk.txt`、`tygf.txt`、`Unihan_IRGSources.txt`；核验用 TXT 下载失败时可警告。数据来自 `api.chaifen.app` 与 `assets.chaifen.app`。
+共享开发数据只保存于 `data/`。`scripts/fetch.ts` 复用 `scripts/fetch-data.ts` 的严格下载流程，并补充网页和开发核验资源。六份必需文件为 `characters.json`、`glyphs.json`、`enclosure-outlines.json`、`dictionary.txt`、`distribution.txt`、`equivalence.txt`，下载或格式校验失败必须终止，全部成功后才写入。额外资源包括 `gf0014.txt`、`cjk.txt`、`tygf.txt`、`Unihan_IRGSources.txt`；核验用 TXT 下载失败时可警告。数据来自 `api.chaifen.app` 与 `assets.chaifen.app`。
 
 `build` 不自动下载数据。源码 CLI 默认读取 `data/`，安装包读取 `dist/data/`；参数 `--data-dir` 和单文件参数可以覆盖默认文件。命令行路径相对当前工作目录，项目清单中的路径相对清单本身。
 
-`prepack` 构建并按白名单复制五份运行数据及示例 YAML 至 `dist/`，先清理旧资源目录。核验资源不发布；安装包不执行下载，运行时不自动更新数据。`check:package` 检查真实安装产物中的 Node API、CLI、示例和默认数据，防止工作区链接或应用依赖掩盖漏打包；安装步骤需要 npm registry，安装后的运行不访问数据服务器。
+`prepack` 构建并按白名单复制五份可覆盖的运行数据及示例 YAML 至 `dist/`，先清理旧资源目录。算法静态加载的包围轮廓随包发布在 `data/enclosure-outlines.json`。核验资源不发布；安装包不执行下载，运行时不自动更新数据。`check:package` 检查真实安装产物中的 Node API、CLI、示例和默认数据，防止工作区链接或应用依赖掩盖漏打包；安装步骤需要 npm registry，安装后的运行不访问数据服务器。
 
 ## 算法模块（`src/`）
 
@@ -194,6 +194,8 @@ bun run check:code-tables --base-url https://assets.chaifen.app/code-tables --ou
 数据库和配置文件的新字段使用 `snake_case`。
 
 复合体仅使用 `结构描述字符列表` 中的二元、三元操作符：⿲、⿳ 必须有三个操作数，其余必须有两个。⿾（U+2FFE）和 ⿿（U+2FFF）已从本项目移除，不再使用；镜像、旋转后的字形直接保存为展开笔画的部件，不保留一元复合体。
+
+为包围让位而变形的外框引用原形。复合体展开按结构符和首项的字形 ID 自动选择外框轮廓和内件默认范围，显式引用坐标仍优先。实际笔形、笔顺或分部有独立差异的字形继续登记。
 
 #### 整数存储
 

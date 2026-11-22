@@ -6,6 +6,20 @@ info:
   author: 小泥巴
   description: 形码单字四二顶
 data:
+  glyph_algebra:
+    # 本方案在这些包围结构中按外框的分部取根。
+    - from: {operator: ⿺, references: [0x2032d, {variable: 1}]}
+      to: {operator: ⿺, references: [{operator: ⿱, references: [0x0020e, 0x00359]}, {variable: 1}]}
+    - from: {operator: ⿸, references: [0x35714, {variable: 1}]}
+      to: {operator: ⿸, references: [{operator: ⿸, references: [0x002a5, 0x4b315]}, {variable: 1}]}
+    - from: {operator: ⿸, references: [0x5160b, {variable: 1}]}
+      to: {operator: ⿸, references: [{operator: ⿸, references: [0x0064e, 0x15104]}, {variable: 1}]}
+    - from: {operator: ⿺, references: [0x1c60c, {variable: 1}]}
+      to: {operator: ⿺, references: [{operator: ⿺, references: [0x00641, 0x00197]}, {variable: 1}]}
+    - from: {operator: ⿸, references: [0x1b405, {variable: 1}]}
+      to: {operator: ⿸, references: [{operator: ⿸, references: [0x0010a, 0x07212]}, {variable: 1}]}
+    - from: {operator: {variable: 0, opearator_set: [⿷, ⿸, ⿺]}, references: [0x8d105, {variable: 1}]}
+      to: {operator: {variable: 0}, references: [{operator: ⿸, references: [0x1930b, 0x00151]}, {variable: 1}]}
   character_customization:
     胤: [{type: insert, id: 983046, sources: []}]
     蕞: [{type: insert, id: 983047, sources: []}]
@@ -129,6 +143,10 @@ analysis:
     - 能散不连
     - 取大优先
   customize:
+    # 按码表核定个别整字的取根。
+    字形-1361f: ["", "", "尢", "力"] # 勉
+    字形-27304: ["", "", "子"] # 觃
+    字形-3b50a: ["立", "3", "彡"] # 彦
     "\ue00b":
       - 䒑
       - 夫

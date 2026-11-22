@@ -45,6 +45,13 @@ try {
     { cwd: directory, stdio: "inherit", env: npmEnv },
   );
   const installed = path.join(directory, "node_modules/hanzi-chai");
+  assert.deepEqual(readdirSync(path.join(installed, "data")), [
+    "enclosure-outlines.json",
+  ]);
+  assert.deepEqual(
+    readFileSync(path.join(installed, "data/enclosure-outlines.json")),
+    readFileSync(new URL("data/enclosure-outlines.json", packageRoot)),
+  );
   assert.deepEqual(readdirSync(path.join(installed, "dist/data")).sort(), [
     "characters.json",
     "dictionary.txt",

@@ -1,11 +1,15 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { 笔画表示方式 } from "../src/classifier.js";
+import table from "../src/enclosure-layouts.json" with { type: "json" };
+import { 是合法字形ID } from "../src/glyph-id.js";
 
 export const packageRoot = new URL("../", import.meta.url);
 export const dataDirectory = new URL("data/", packageRoot);
 export const dataSources = {
   "characters.json": "https://api.chaifen.app/characters",
   "glyphs.json": "https://api.chaifen.app/glyphs",
+  "enclosure-outlines.json": "https://api.chaifen.app/enclosure-outlines",
   "dictionary.txt": "https://assets.chaifen.app/dictionary.txt",
   "distribution.txt": "https://assets.chaifen.app/distribution.txt",
   "equivalence.txt": "https://assets.chaifen.app/equivalence.txt",
@@ -14,10 +18,64 @@ export const dataSources = {
 /** 发布必需文件不能沿用下载失败时的空文件或错误响应。 */
 export type DataFilename = keyof typeof dataSources;
 
+const 包围轮廓ID = Object.values(table.operators).flatMap((layouts) =>
+  Object.values(layouts),
+);
+const 命令参数个数: Readonly<Record<string, number>> = {
+  a: 1,
+  h: 1,
+  v: 1,
+  l: 2,
+  c: 6,
+  z: 6,
+};
+const 是整数坐标 = (value: unknown, length: number | undefined) =>
+  Array.isArray(value) &&
+  value.length === length &&
+  value.every(Number.isSafeInteger);
+
 export function validateData(filename: string, bytes: Buffer): void {
-  const fail = (): never => {
+  function fail(): never {
     throw new Error(`数据格式无效：${filename}`);
-  };
+  }
+  if (filename === "enclosure-outlines.json") {
+    const outlines = JSON.parse(bytes.toString("utf8"));
+    if (!outlines || typeof outlines !== "object" || Array.isArray(outlines))
+      fail();
+    for (const id of 包围轮廓ID) {
+      if (!Object.hasOwn(outlines, id)) fail();
+    }
+    for (const [key, strokes] of Object.entries(outlines)) {
+      const id = Number(key);
+      if (
+        !是合法字形ID(id) ||
+        String(id) !== key ||
+        !Array.isArray(strokes) ||
+        !strokes.length
+      )
+        fail();
+      for (const stroke of strokes) {
+        if (
+          !stroke ||
+          typeof stroke.feature !== "string" ||
+          !Object.hasOwn(笔画表示方式, stroke.feature) ||
+          !是整数坐标(stroke.start, 2) ||
+          !Array.isArray(stroke.curveList) ||
+          !stroke.curveList.length
+        )
+          fail();
+        for (const curve of stroke.curveList) {
+          if (
+            !curve ||
+            typeof curve.command !== "string" ||
+            !是整数坐标(curve.parameterList, 命令参数个数[curve.command])
+          )
+            fail();
+        }
+      }
+    }
+    return;
+  }
   if (filename.endsWith(".json")) {
     const records = JSON.parse(bytes.toString("utf8"));
     if (!Array.isArray(records) || records.length === 0) fail();

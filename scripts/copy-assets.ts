@@ -10,7 +10,9 @@ import { load } from "js-yaml";
 import { 校验配置结构 } from "../dist/validation.js";
 import { packageRoot, readDataFiles } from "./assets.js";
 
-const { buffers } = readDataFiles();
+const {
+  buffers: { "enclosure-outlines.json": _, ...buffers },
+} = readDataFiles();
 const source = new URL("examples/", packageRoot);
 const examples = readdirSync(source)
   .filter((file) => file.endsWith(".yaml"))
@@ -23,6 +25,8 @@ const schemes = examples.map((file): [string, Buffer] => {
 });
 // 清理旧版资源，防止已取消发布的文件继续残留在 dist 中。
 for (const file of [
+  "enclosure-operators.json",
+  "enclosure-outlines.json",
   "glyph-id-legacy.js",
   "glyph-id-legacy.d.ts",
   "glyph-id-migration-map.json",

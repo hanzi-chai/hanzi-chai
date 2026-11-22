@@ -1,4 +1,5 @@
 import { Router } from "itty-router";
+import { ListEnclosureOutlines } from "../controller/glyphs";
 import { Login } from "../controller/users";
 import { routerCharacters } from "./characters";
 import { routerEquivalence } from "./equivalence";
@@ -21,5 +22,6 @@ export const routerApi = Router()
   .all("/characters/*", routerCharacters.fetch)
   // 字形子路由
   .all("/glyphs/*", routerGlyphs.fetch)
+  .get("/enclosure-outlines", ListEnclosureOutlines)
   // 当量子路由
   .all("/equivalence/*", routerEquivalence.fetch);

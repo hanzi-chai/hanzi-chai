@@ -1,5 +1,11 @@
 import { afterAll, expect, it } from "bun:test";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,6 +19,9 @@ const buffers = fixtureBuffers();
 for (const [filename, bytes] of Object.entries({
   "characters.json": buffers.characters,
   "glyphs.json": buffers.glyphs,
+  "enclosure-outlines.json": readFileSync(
+    new URL("../data/enclosure-outlines.json", import.meta.url),
+  ),
   "dictionary.txt": buffers.dictionary,
   "distribution.txt": buffers.distribution,
   "equivalence.txt": buffers.equivalence,
@@ -45,7 +54,12 @@ it("发布数据校验缺失和格式，允许原地更新，失败下载不覆�
       ['characters.json', '[]'],
       ['characters.json', '{"err":"failed"}'],
       ['glyphs.json', 'broken'],
+      ['enclosure-outlines.json', '{}'],
     ]) assert.throws(() => validateData(file, Buffer.from(text)));
+    const outlines = JSON.parse(buffers['enclosure-outlines.json'].toString());
+    const [stroke] = Object.values(outlines)[0];
+    stroke.start[0] = 1.5;
+    assert.throws(() => validateData('enclosure-outlines.json', Buffer.from(JSON.stringify(outlines))));
     let failure;
     globalThis.fetch = async (url) => {
       const file = Object.keys(dataSources).find((file) => dataSources[file] === url);

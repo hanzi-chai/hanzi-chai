@@ -17,6 +17,8 @@ Cloudflare Worker，使用 itty-router。目录结构：
 
 绑定资源：D1 数据库 `CHAI`、KV 命名空间 `REFERENCE`。
 
+包围外框的笔画存于 D1 的 `enclosure_outlines` 表，按轮廓 ID 通过 `GET /enclosure-outlines` 提供给共享数据下载脚本。
+
 ## 依赖与命令
 
 服务使用 Cloudflare Workers、itty-router、D1、KV 和 JWT，依赖与配置以本目录 `package.json`、`wrangler.toml` 为准。公开 REST API 位于 `https://api.chaifen.app`，字库写入使用 Bearer token 鉴权。

@@ -11,7 +11,7 @@ const { values } = parseArgs({
     "data-dir": { type: "string", default: "data" },
     out: {
       type: "string",
-      default: "output/vertical-structure-audit-2026-11-14",
+      default: "output/vertical-structure-audit",
     },
   },
 });
@@ -79,9 +79,8 @@ for (const c of characters)
     if (!labels.has(r.id) || (c.unicode >= 0x4e00 && c.unicode <= 0x9fff))
       labels.set(r.id, String.fromCodePoint(c.unicode));
   }
-const localNames = new Map([[957, "衣字底"]]);
 const label = (id: number) =>
-  `${map.get(id)?.name ?? localNames.get(id) ?? labels.get(id) ?? "分部"}(#${id.toString(16).toUpperCase().padStart(5, "0")})`;
+  `${map.get(id)?.name ?? labels.get(id) ?? "分部"}(#${id.toString(16).toUpperCase().padStart(5, "0")})`;
 const expr = (g: 基本字形数据) =>
   g.type === "compound"
     ? `${g.operator} ${g.references.map((r) => label(r.id)).join(" / ")}`
@@ -332,34 +331,21 @@ for (const group of groups) {
     );
   }
 }
-function flattenScenario(name: string, ids: number[]) {
-  scenario(
-    name,
-    ids.map((id) => ({ id, operator: "⿳", references: flatten(id) })),
-  );
-}
-flattenScenario("曼两来源一起三层化", [296534, 296535]);
-flattenScenario("帚现有二层写法改为三层，与另一写法一致", [205873]);
-flattenScenario("鬲的 JKN 形统一为三层，保留 GHT 三层", [6247]);
-scenario(
-  "豆与鬲的 GHT 形同时合并一口",
-  [5444, 6248].map((id) => ({
-    id,
-    operator: "⿱",
-    references: [4638, map.get(id)!.references![2]!.id],
-  })),
-);
 const favorableFlat = flatBatch.filter((r) => delta([r]) < 0);
-scenario("32 个单独有利的三层化候选联合计算（尚未图形审核）", favorableFlat);
 scenario(
-  "230 个独立最优候选同时替换（尚未图形审核）",
-  rows
-    .filter((r) => r.best_delta < -1e-12)
-    .map((r) => ({
-      id: r.id,
-      operator: r.candidates[0]!.operator,
-      references: r.candidates[0]!.references,
-    })),
+  `${favorableFlat.length} 个单独有利的三层化候选联合计算（尚未图形审核）`,
+  favorableFlat,
+);
+const bestChanges = rows
+  .filter((r) => r.best_delta < -1e-12)
+  .map((r) => ({
+    id: r.id,
+    operator: r.candidates[0]!.operator,
+    references: r.candidates[0]!.references,
+  }));
+scenario(
+  `${bestChanges.length} 个独立最优候选同时替换（尚未图形审核）`,
+  bestChanges,
 );
 const summary = {
   scope: "U+4E00–U+9FFF；全部来源形与递归引用；每个字形 ID 去重",

@@ -20,6 +20,22 @@ analysis:
     - 连续笔顺
     - 取大优先
   customize:
+    # 按码表核定个别整字的取根。
+    字形-05d07: ["广", "", "", "5", "心", "夂"] # 慶
+    字形-56844: ["广", "", "", "1", "5", "灬"] # 廌
+    字形-9160b: ["亻", "彐", "1", "5", "衣"] # 裊
+    字形-01c71: ["臼", "5", "", "5", "", "5", "1"] # 𫜢
+    字形-86a12: ["臼", "5", "", "5", "", "5", "尹"] # 𲎝
+    字形-86a13: ["臼", "5", "", "5", "", "5", "5", ""] # 𮮬
+    字形-86b13: ["臼", "5", "", "5", "", "5", "", "4", "龴"] # 𪕌
+    字形-86b17: ["臼", "5", "", "5", "", "5", "", "工"] # 𬹭
+    字形-86c0b: ["臼", "5", "", "5", "", "5", "夕", "夕"] # 𳑙
+    字形-86d06: ["臼", "5", "", "5", "", "5", "尹", "口"] # 𲎞
+    字形-86e07: ["臼", "5", "", "5", "", "5", "日", "木"] # 𬹮
+    字形-86e08: ["臼", "5", "", "5", "", "5", "立", "口"] # 𮮮
+    字形-86f1d: ["臼", "5", "", "5", "", "5", "口", "口", ""] # 𮮯
+    字形-86f20: ["臼", "5", "", "5", "", "5", "予", "3", "木"] # 𲎟
+    字形-b7c01: ["臼", "5", "", "5", "", "5", "飞", "3", "", "5", "3", "4"] # 𳑤
     与:
       - 二
       - '5'
@@ -191,15 +207,6 @@ analysis:
     "\ue066":
       - 艹
       - 日
-    "\ue0d7":
-      - 亻
-      - 彐
-      - '1'
-      - '5'
-    "\ue0dc":
-      - 广
-      - "\ue009"
-      - "\ue001"
     "\ue0dd":
       - 革
       - 二
@@ -904,6 +911,20 @@ encoder:
       positive: s4
       negative: s15
 data:
+  glyph_algebra:
+    # 本方案在这些包围结构中按外框的分部取根。
+    - from: {operator: ⿵, references: [0x02627, {variable: 1}]}
+      to: {operator: ⿵, references: [{operator: ⿰, references: [0x00369, 0x0036c]}, {variable: 1}]}
+    - from: {operator: ⿺, references: [0x2032d, {variable: 1}]}
+      to: {operator: ⿺, references: [{operator: ⿱, references: [0x0020e, 0x00359]}, {variable: 1}]}
+    - from: {operator: ⿸, references: [0x5160b, {variable: 1}]}
+      to: {operator: ⿸, references: [{operator: ⿸, references: [0x0064e, 0x15104]}, {variable: 1}]}
+    - from: {operator: ⿸, references: [0x51609, {variable: 1}]}
+      to: {operator: ⿸, references: [{operator: ⿸, references: [0x0064e, 0x15102]}, {variable: 1}]}
+    - from: {operator: ⿺, references: [0x1c60c, {variable: 1}]}
+      to: {operator: ⿺, references: [{operator: ⿺, references: [0x00641, 0x00197]}, {variable: 1}]}
+    - from: {operator: ⿸, references: [0x1b405, {variable: 1}]}
+      to: {operator: ⿸, references: [{operator: ⿸, references: [0x0010a, 0x07212]}, {variable: 1}]}
   character_set: extended
   character_customization:
     面: [{type: insert, id: 983040, sources: []}]
