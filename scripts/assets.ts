@@ -18,9 +18,10 @@ export const dataSources = {
 /** 发布必需文件不能沿用下载失败时的空文件或错误响应。 */
 export type DataFilename = keyof typeof dataSources;
 
-const 包围轮廓ID = Object.values(table.operators).flatMap((layouts) =>
-  Object.values(layouts),
-);
+const 包围轮廓ID = [
+  ...Object.values(table.operators),
+  ...Object.values(table.overlaps),
+].flatMap((layouts) => Object.values(layouts));
 const 命令参数个数: Readonly<Record<string, number>> = {
   a: 1,
   h: 1,

@@ -863,6 +863,8 @@ encoder:
       formula: AaBaCaZa
 data:
   glyphs:
+    # 與字头兼容取根沿用原布局和交错笔顺。
+    - {id: 0xf01f0, type: compound, operator: ⿴, references: [{id: 0x0451f}, {id: 0x0023a, xbegin: 25, xend: 75, ybegin: 0, yend: 100}], strokes: [{index: 0, to: 3}, {index: 1}, {index: 0, from: 4}]}
     # 星陈统一采用撇起笔的「壬」，含该港、台标分部的字也沿用这一写法。
     - id: 0x00309
       type: component
@@ -1691,6 +1693,37 @@ data:
     - H
     - T
   glyph_algebra:
+    - from: 0x86202
+      to: 0xf01f0
+    # 夹在臼裂两侧的中件独立取根，按既有方案顺序组合。
+    - from: 0x0da0a
+      to: {operator: ⿴, references: [0x0d30d, 0x0451f]}
+    - from: 0x18612
+      to: {operator: ⿻, references: [0x00105, 0x0451f]}
+    - from: 0x2066b
+      to: {operator: ⿻, references: [0x0020e, 0x0451f]}
+    - from: 0x4b68e
+      to: {operator: ⿻, references: [0x0032b, 0x0451f]}
+    - from: 0x86100
+      to: {operator: ⿻, references: [0x00125, 0x0451f]}
+    - from: 0x8611a
+      to: {operator: ⿻, references: [0x00144, 0x0451f]}
+    - from: 0x86200
+      to: {operator: ⿻, references: [0x0023e, 0x0451f]}
+    - from: 0x86327
+      to: {operator: ⿴, references: [0x0422c, 0x0451f]}
+    - from: 0x86503
+      to: {operator: ⿻, references: [0x00536, 0x0451f]}
+    - from: 0x86600
+      to: {operator: ⿻, references: [0x6d100, 0x0451f]}
+    - from: 0x86601
+      to: {operator: ⿴, references: [0x6d100, 0x0451f]}
+    - from: {operator: ⿲, references: [0x0039f, {variable: 0, id_set: [0x0023a, 0x00340, 0x0037c, 0x0060e, 0x0422c, 0x04448, 0x6d100]}, 0x002bd]}
+      to: {operator: ⿴, references: [0x0451f, {variable: 0}]}
+    - from: {operator: ⿲, references: [0x0039f, {variable: 0, id_set: [0x00002, 0x00004, 0x0001e, 0x00029, 0x00105, 0x00120, 0x00125, 0x00144, 0x00145, 0x00198, 0x00227, 0x0023e, 0x00292, 0x002ca, 0x002f3, 0x0032b, 0x003b5, 0x003d1, 0x0042e, 0x00451, 0x00464, 0x00474, 0x00493, 0x004cd, 0x00572, 0x0061c, 0x02009, 0x02102, 0x02220, 0x0432c, 0x0820a, 0x08421, 0x1221b, 0x1243f, 0x18207, 0x18208, 0x1d108, 0x21204, 0x4a000, 0x4b315, 0x75000]}, 0x002bd]}
+      to: {operator: ⿻, references: [0x0451f, {variable: 0}]}
+    - from: 0x86509
+      to: {operator: ⿻, references: [0x0451f, 0x0d30d]}
     # 星陈把奐的前两部分合取一个字根。
     - from: {operator: ⿳, references: [0x0014e, 0x0c104, {variable: 1, id_set: [0x00227, 0x003d9]}]}
       to: {operator: ⿱, references: [0xf0091, {variable: 1}]}

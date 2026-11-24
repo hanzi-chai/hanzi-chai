@@ -54,7 +54,15 @@ function 获取包围布局编号(
 export function 获取包围外框笔画(
   outer: 引用数据 | undefined,
   operator?: 结构描述字符,
+  inner?: 引用数据,
 ): 矢量图形数据 | undefined {
+  if (operator === "⿻" && outer && inner) {
+    const 重叠轮廓表: Readonly<
+      Record<string, Readonly<Record<string, number>>>
+    > = table.overlaps;
+    const 编号 = 重叠轮廓表[outer.id]?.[inner.id];
+    return 编号 === undefined ? undefined : 外框轮廓表[编号];
+  }
   const 布局 = 获取包围布局编号(outer, operator);
   if (布局 !== undefined) return 外框轮廓表[布局];
 }

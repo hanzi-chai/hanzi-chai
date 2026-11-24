@@ -87,7 +87,9 @@ export class 字形归部检索 {
     const 左界 = 引用.xbegin ?? xb;
     const 右界 = 引用.xend ?? xe;
     const 外框笔画 =
-      index === 0 ? 获取包围外框笔画(引用, 父字形.operator) : undefined;
+      index === 0
+        ? 获取包围外框笔画(引用, 父字形.operator, 父字形.references[1])
+        : undefined;
     const 图形 = 外框笔画
       ? 图形盒子.从笔画列表构建(外框笔画)
       : this.获取图形(引用.id);

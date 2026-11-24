@@ -945,5 +945,8 @@ data:
     鬻: [{type: insert, id: 0xf004c, sources: []}]
   # 将衣、行的外框重组为已有字根，内件保持独立。
   glyph_algebra:
+    # 本方案将盥的两侧合为臼根取码。
+    - from: 0x86304
+      to: {operator: ⿴, references: [0x0451f, 0x0037c]}
     - {from: {operator: ⿳, references: [0x0016e, {variable: 1}, 0x003bd]}, to: {operator: ⿴, references: [0x08324, {variable: 1}]}}
     - {from: {operator: ⿲, references: [0x0027e, {variable: 1}, 0x00203]}, to: {operator: ⿴, references: [0x3c200, {variable: 1}]}}

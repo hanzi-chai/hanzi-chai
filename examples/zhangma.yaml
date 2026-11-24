@@ -553,6 +553,11 @@ encoder:
 data:
   # 害的共享字形统一三层；张码沿用害字底的二、古兼容分部。
   glyph_algebra:
+    # 本方案将盥、舆的两侧合为臼根取码。
+    - from: 0x86304
+      to: {operator: ⿴, references: [0x0451f, 0x0037c]}
+    - from: 0x86303
+      to: {operator: ⿴, references: [0x0451f, 0x00340]}
     - from: {operator: ⿳, references: [0x002b5, 0x00301, 0x00258]}
       to: {operator: ⿱, references: [0x002b5, 0x1e300]}
   fusion: [0x1f311]

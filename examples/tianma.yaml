@@ -1099,6 +1099,9 @@ data:
     - G
   # 行框保留中件；离字头重组为文、凵，供全部宿主共用。
   glyph_algebra:
+    # 本方案将盥的两侧合为臼根取码。
+    - from: 0x86304
+      to: {operator: ⿴, references: [0x0451f, 0x0037c]}
     - from: {operator: ⿲, references: [0x0027e, {variable: 0}, 0x00203]}
       to: {operator: ⿰, references: [0x3c200, {variable: 0}]}
     - from: 0x08321

@@ -1077,7 +1077,7 @@ export function 仿射合并(
     const 变换 = new 仿射变换(xInterval, yInterval);
     变换列表.push(变换);
   }
-  const 外框笔画 = 获取包围外框笔画(references[0], operator);
+  const 外框笔画 = 获取包围外框笔画(references[0], operator, references[1]);
   const 变换后图形列表 = 部分列表.map((part, index) => {
     const 笔画 = (index === 0 && 外框笔画) || part.获取笔画列表();
     return 变换列表[index]!.变换笔画列表(笔画);

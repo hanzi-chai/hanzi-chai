@@ -1053,6 +1053,11 @@ data:
     齑:
       - {type: update, sources: [G], id: 0xf0031}
   glyph_algebra:
+    # 本方案将盥、舆的两侧合为臼根取码。
+    - from: 0x86304
+      to: {operator: ⿴, references: [0x0451f, 0x0037c]}
+    - from: 0x86303
+      to: {operator: ⿴, references: [0x0451f, 0x00340]}
     - from: 0x6f301
       to: 0xf0024
     - from: 0x1e583

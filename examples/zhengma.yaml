@@ -937,6 +937,9 @@ data:
     - {id: 983049, name: 容（郑码）, type: compound, operator: ⿳, references: [{id: 164100}, {id: 325}, {id: 600}]}
     - {id: 983050, name: 胤（郑码）, type: compound, operator: ⿴, references: [{id: 335}, {id: 213767}], strokes: [{index: 0, from: 0, to: 0}, {index: 1, from: 0}, {index: 0, from: 1}]}
   glyph_algebra:
+    # 本方案将盥的两侧合为臼根取码。
+    - from: 0x86304
+      to: {operator: ⿴, references: [0x0451f, 0x0037c]}
     # 本方案在这些包围结构中按外框的分部取根。
     - from: {operator: ⿺, references: [0x2032d, {variable: 1}]}
       to: {operator: ⿺, references: [{operator: ⿱, references: [0x0020e, 0x00359]}, {variable: 1}]}
