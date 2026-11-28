@@ -62,6 +62,7 @@ export * from "./pinyin.js";
 export * from "./proofread.js";
 export * from "./registry.js";
 export * from "./repertoire.js";
+export * from "./root-selection.js";
 export * from "./scheme.js";
 export * from "./selector.js";
 export * from "./stroke-render.js";
