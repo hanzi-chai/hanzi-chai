@@ -1,4 +1,6 @@
 /** 方案运行的公共流程。此模块不依赖文件系统、React 或 Worker。 */
+import { isEqual } from "lodash-es";
+import { 创建静态分析环境 } from "./analysis-execution.js";
 import {
   动态组装,
   type 动态组装条目,
@@ -26,6 +28,7 @@ import {
   下转换,
   决策图,
   type 原始词典,
+  序列化强类型决策,
   type 强类型决策,
   type 强类型决策空间,
   type 当量映射,
@@ -316,6 +319,25 @@ export function 分析方案(上下文: 方案上下文, 汉字集合 = 上下�
     dynamic: false as const,
     value: 解包结果(字库.分析(字形分析配置, 汉字集合), "/analysis"),
   };
+}
+
+/** 保留动态组装条目的原顺序，供编码结果逐条对齐。 */
+export function 选取当前组装条目(
+  条目: readonly 动态组装条目[],
+  决策: 强类型决策,
+): (组装条目 | undefined)[] {
+  const 安排 = 序列化强类型决策(决策);
+  const 环境 = 创建静态分析环境(({ element, op, value }) => {
+    const 相同 = isEqual(
+      Object.hasOwn(安排, element) ? 安排[element] : null,
+      value,
+    );
+    return op === "是" ? 相同 : !相同;
+  });
+  return 条目.map((项) => {
+    const 元素序列 = 环境.选择(项.元素序列);
+    return 元素序列 ? { ...项, 元素序列 } : undefined;
+  });
 }
 
 export function 组装方案(上下文: 方案上下文, 分析 = 分析方案(上下文)) {

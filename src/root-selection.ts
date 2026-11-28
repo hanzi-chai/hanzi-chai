@@ -1,5 +1,4 @@
 import { isEqual } from "lodash-es";
-import { 创建静态分析环境 } from "./analysis-execution.js";
 import type { 组装条目 } from "./assembly.js";
 import { 部件 } from "./component.js";
 import { 复合体 } from "./compound.js";
@@ -16,9 +15,13 @@ import {
   type 离散分析配置,
 } from "./dispersion.js";
 import type { 字形 } from "./repertoire.js";
-import { type 方案上下文, 替换方案键盘, 组装方案 } from "./scheme.js";
+import {
+  type 方案上下文,
+  替换方案键盘,
+  组装方案,
+  选取当前组装条目,
+} from "./scheme.js";
 import { 字符 } from "./unicode.js";
-import { 序列化强类型决策 } from "./utils.js";
 
 export interface 字根改动 {
   name: string;
@@ -149,18 +152,9 @@ function 变更字根(方案: 方案上下文, 改动: readonly 字根改动[]) 
 function 取当前组装条目(方案: 方案上下文): 组装条目[] {
   const 结果 = 组装方案(方案);
   if (!结果.dynamic) return 结果.条目;
-  const 决策 = 序列化强类型决策(方案.决策);
-  const 环境 = 创建静态分析环境(({ element, op, value }) => {
-    const 相同 = isEqual(
-      Object.hasOwn(决策, element) ? 决策[element] : null,
-      value,
-    );
-    return op === "是" ? 相同 : !相同;
-  });
-  return 结果.条目.flatMap((项) => {
-    const 元素序列 = 环境.选择(项.元素序列);
-    return 元素序列 ? [{ ...项, 元素序列 }] : [];
-  });
+  return 选取当前组装条目(结果.条目, 方案.决策).filter(
+    (项): 项 is 组装条目 => 项 !== undefined,
+  );
 }
 
 function 全量评分(方案: 方案上下文, { tables, rootPenalty }: 选根评分配置) {

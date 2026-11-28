@@ -8,16 +8,16 @@ import {
   ProFormSwitch,
 } from "@ant-design/pro-components";
 import { Flex, Form, Skeleton, Switch, Table, Typography } from "antd";
-import { 反序列化, 序列化, type 码表条目, type 部分目标类型 } from "hanzi-chai";
+import { 序列化, type 码表条目, type 部分目标类型 } from "hanzi-chai";
 import { useAtomValue } from "jotai";
-import { range, sum, sumBy } from "lodash-es";
-import { Suspense, useState } from "react";
+import { range, sum } from "lodash-es";
+import { Suspense, useMemo, useState } from "react";
 import type { 联合条目 } from "~/atoms";
 import {
   useAtomValueUnwrapped,
-  全部合法元素原子,
   字母表原子,
   最大码长原子,
+  用户当量映射原子,
   联合结果原子,
   部分目标类型名称映射,
   默认当量原子,
@@ -25,7 +25,9 @@ import {
 } from "~/atoms";
 import "~/components/charts.css";
 import type { ColumnsType } from "antd/es/table";
+import { use多重排序 } from "~/components/table-sort";
 import { CodePositionDisplay } from "~/components/Utils";
+import { 码表范围, 统计重码分布 } from "~/encoding-insights";
 import { useChaifenTitle, 数字, 标准键盘, 颜色插值 } from "~/utils";
 
 const { Column, Heatmap } = await import("~/components/export/charts");
@@ -34,19 +36,11 @@ interface 带频码表条目 extends 码表条目 {
   频率: number;
 }
 
-const 按部分目标类型过滤 = (type: 部分目标类型, combined: 联合条目[]) => {
-  const result: 带频码表条目[] = [];
-  for (const 条目 of combined) {
-    if (type.includes("character") !== (条目.词.length === 1)) continue;
-    const code = type.includes("full") ? 条目.全码 : 条目.简码;
-    result.push({
-      词: 条目.词.map((c) => c.获取名称()).join(""),
-      编码: code,
-      频率: 条目.频率,
-    });
-  }
-  return result;
-};
+const 按部分目标类型过滤 = (
+  type: 部分目标类型,
+  combined: 联合条目[],
+): 带频码表条目[] =>
+  码表范围(combined, type).map(({ 词, 码, 频率 }) => ({ 词, 编码: 码, 频率 }));
 
 interface 分布统计范围 {
   类型: 部分目标类型;
@@ -95,7 +89,7 @@ const 构建分布 = (
     }
   }
   const total = sum([...result.values()].map((x) => x.count));
-  if (config.加权) {
+  if (config.加权 && total > 0) {
     for (const key of result.keys()) {
       result.get(key)!.count /= total;
     }
@@ -126,7 +120,7 @@ const countFingering = (
     }
   }
   const total = sum([...result.values()].map((x) => x.count));
-  if (config.加权) {
+  if (config.加权 && total > 0) {
     for (const key of result.keys()) {
       result.get(key)!.count /= total;
     }
@@ -146,7 +140,11 @@ const KeyboardItem = ({
   dynamic: boolean;
 }) => {
   const formatted = dynamic ? `${(value * 100).toFixed(2)}` : value.toFixed(0);
-  const color = 颜色插值("#f5f5f5", blue[4]!, value / maximum);
+  const color = 颜色插值(
+    "#f5f5f5",
+    blue[4]!,
+    maximum > 0 ? value / maximum : 0,
+  );
   return (
     <Flex
       vertical
@@ -304,7 +302,9 @@ const MatrixHeatMap = ({
   dynamic: boolean;
   isFingering?: boolean;
 }) => {
-  const pairEquivalence = useAtomValue(默认当量原子);
+  const 用户当量 = useAtomValue(用户当量映射原子);
+  const 默认当量 = useAtomValue(默认当量原子);
+  const pairEquivalence = 用户当量 ?? 默认当量;
   const sequence: string[] = [];
   for (const column of range(标准键盘[0]!.length)) {
     for (const row of 标准键盘) {
@@ -347,7 +347,9 @@ const MatrixHeatMap = ({
           field: "items",
           name: "对象",
           color: false,
-          valueFormatter: (items: string[]) => items.join(""),
+          valueFormatter: (items: string[]) =>
+            items.slice(0, 60).join("、") +
+            (items.length > 60 ? ` 等 ${items.length} 项` : ""),
         },
         {
           field: "count",
@@ -364,6 +366,7 @@ const MatrixHeatMap = ({
       ],
     },
     label: {
+      style: { pointerEvents: "none" },
       text: (d: any) => (dynamic ? (d.count * 100).toFixed(2) : d.count),
     },
     scale: {
@@ -406,7 +409,9 @@ const EquivalenceColumns = ({
   result: 分布结果;
   dynamic: boolean;
 }) => {
-  const pairEquivalence = useAtomValue(默认当量原子);
+  const 用户当量 = useAtomValue(用户当量映射原子);
+  const 默认当量 = useAtomValue(默认当量原子);
+  const pairEquivalence = 用户当量 ?? 默认当量;
   const eqMap = new Map<number, number>();
   [...result].forEach(([key, { count }]) => {
     const equivalence = pairEquivalence.get(key) ?? 0;
@@ -491,97 +496,46 @@ const FingeringDistribution = () => {
   );
 };
 
-interface DuplicationDistributionEntry {
-  key: string;
-  count: number;
-  items: [string, string][];
-}
+type 重码行 = ReturnType<typeof 统计重码分布>["分布"][number];
 
 const DuplicationDistribution = () => {
   const combined = useAtomValueUnwrapped(联合结果原子);
-  const duplicationMap = new Map<string, 联合条目[]>();
-  const pairMap = new Map<string, [string, string][]>();
   const [仅一字词, set仅一字词] = useState(true);
-  const { 名称映射 } = useAtomValueUnwrapped(全部合法元素原子);
-
-  for (const item of combined) {
-    if (仅一字词 && item.词.length !== 1) continue;
-    const key = item.全码;
-    const previous = duplicationMap.get(key) ?? [];
-    previous.push(item);
-    duplicationMap.set(key, previous);
-  }
-
-  for (const value of duplicationMap.values()) {
-    if (value.length < 2) continue;
-    for (const [iFirst, first] of value.entries()) {
-      for (const [iSecond, second] of value.entries()) {
-        if (iFirst >= iSecond) continue;
-        const pair: [string, string] = [
-          first.词.map((c) => c.获取名称()).join(""),
-          second.词.map((c) => c.获取名称()).join(""),
-        ];
-        const length = Math.max(
-          first.元素序列.元素序列.length,
-          second.元素序列.元素序列.length,
-        );
-        for (let i = 0; i < length; i++) {
-          const k1 = 序列化(first.元素序列.元素序列[i]);
-          const k2 = 序列化(second.元素序列.元素序列[i]);
-          if (k1 === k2) continue;
-          const [ck1, ck2] = [k1, k2].sort() as [string, string];
-          const key = `${ck1} ${ck2}`;
-          const previous = pairMap.get(key) ?? [];
-          previous.push(pair);
-          pairMap.set(key, previous);
-        }
-      }
-    }
-  }
-
-  const dataSource = [...pairMap]
-    .map(([key, value]) => ({
-      key,
-      count: value.length,
-      items: value,
-    }))
-    .sort((a, b) => b.count - a.count);
-
-  const columns: ColumnsType<DuplicationDistributionEntry> = [
-    {
-      title: "键",
-      dataIndex: "key",
-      key: "key",
-      width: 128,
-      render: (key: string) => {
-        const [first, second] = key
-          .split(" ")
-          .map((x) => 反序列化(x, 名称映射));
-        if (!first?.ok || !second?.ok) return key;
-        return (
-          <span>
-            <CodePositionDisplay element={first.value!} />・
-            <CodePositionDisplay element={second.value!} />
-          </span>
-        );
-      },
-    },
-    {
-      title: "数量",
-      dataIndex: "count",
-      key: "count",
-      width: 64,
-    },
-    {
-      title: "对象",
-      dataIndex: "items",
-      key: "items",
-      render: (items: [string, string][]) => (
-        <span>
-          {items.map(([first, second]) => `${first} / ${second}`).join(", ")}
-        </span>
+  const { 重码数, 分布 } = useMemo(
+    () =>
+      统计重码分布(
+        仅一字词 ? combined.filter((x) => x.词.length === 1) : combined,
       ),
+    [combined, 仅一字词],
+  );
+  const { 列排序, onChange } = use多重排序<重码行>("重码分布");
+  const 根列 = (name: "根1" | "根2"): ColumnsType<重码行>[number] => ({
+    ...列排序(name, name, (a, b) =>
+      序列化(a[name]).localeCompare(序列化(b[name])),
+    ),
+    filters: [...new Set(分布.map((行) => 序列化(行[name])))]
+      .sort()
+      .map((value) => ({ text: value, value })),
+    filterSearch: true,
+    onFilter: (value, 行) => 序列化(行[name]) === value,
+    render: (_, 行) => <CodePositionDisplay element={行[name]} />,
+  });
+  const columns: ColumnsType<重码行> = [
+    {
+      ...列排序("键", "键", (甲, 乙) => 甲.键.localeCompare(乙.键)),
+      dataIndex: "键",
+      filters: [...new Set(分布.map((行) => 行.键))]
+        .sort()
+        .map((value) => ({ text: value, value })),
+      onFilter: (value, 行) => 行.键 === value,
     },
+    根列("根1"),
+    根列("根2"),
+    {
+      ...列排序("数量", "位对数", (甲, 乙) => 甲.数量 - 乙.数量),
+      dataIndex: "数量",
+    },
+    { title: "对象示例", render: (_, { 例 }) => 例.join("、") },
   ];
   return (
     <>
@@ -592,9 +546,15 @@ const DuplicationDistribution = () => {
         </Form.Item>
       </Flex>
       <Typography.Paragraph>
-        重码总数：{sumBy([...duplicationMap.values()], (x) => x.length - 1)}
+        原码重码条目 {重码数}。同一对词在多个码位碰撞时分别计入位对。
       </Typography.Paragraph>
-      <Table dataSource={dataSource} columns={columns} size="small" />
+      <Table
+        rowKey="id"
+        dataSource={分布}
+        columns={columns}
+        onChange={onChange}
+        size="small"
+      />
     </>
   );
 };

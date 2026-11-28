@@ -1,4 +1,20 @@
 import DeleteOutlined from "@ant-design/icons/DeleteOutlined";
+import MenuOutlined from "@ant-design/icons/MenuOutlined";
+import {
+  type CollisionDetection,
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  pointerWithin,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   Alert,
   Button,
@@ -20,11 +36,14 @@ import {
   type 强类型广义安排,
   type 强类型非归并安排,
   type 强类型非空安排,
+  拼音元素,
   是强类型归并,
   是部件,
   读取表格,
   默认分类器,
 } from "hanzi-chai";
+import { atomWithStorage } from "jotai/utils";
+import { atomFamily } from "jotai-family";
 import { sortBy } from "lodash-es";
 import { type ComponentProps, memo, useState } from "react";
 import {
@@ -44,10 +63,11 @@ import {
   强类型线性化决策原子,
   强类型翻转决策原子,
   当前元素原子,
+  方案序列号原子,
   编码类型原子,
 } from "~/atoms";
 import { exportTSV } from "~/utils";
-import Item from "./Item";
+import ElementInsights from "./ElementInsights";
 import MappingSpace, { RulesForm } from "./MappingSpace";
 import {
   BoxedElementWithTooltip,
@@ -137,6 +157,7 @@ export const ElementDetail = ({
           isCurrent
         />
         <Button onClick={handleConfirm}>确定</Button>
+        <ElementInsights 元素={element} />
         <DeleteButton onClick={handleDelete} disabled={affiliates.length > 0} />
       </Flex>
       <Flex align="center" gap="small">
@@ -251,6 +272,7 @@ export const AdjustableElementGroup = ({
             $shouldHighlight={from === currentElement}
             className="text-[0.85em]"
           >
+            {!displayMode && <sup title="整体归并">3</sup>}
             <ElementDisplay
               key={from.获取名称()}
               hideTypeNames={displayMode}
@@ -361,7 +383,7 @@ const MappingUploader = ({
         }
         setMapping(new Map([...mapping, ...record]));
         setImportResult({
-          success: Object.keys(record).length,
+          success: record.size,
           unknownKeys,
           unknownValues,
         });
@@ -553,39 +575,113 @@ const MappingHeader = () => {
   );
 };
 
+type 映射项 = { 元素: 元素; 安排: 强类型非归并安排 };
+type 拖动目标 = { 键: string; 根?: string };
+type 行顺序 = Record<string, string[]>;
+const 行顺序存储 = atomFamily((id: string) =>
+  atomWithStorage<行顺序>(`chai.row-order:${id}`, {}),
+);
+const 拖动ID = ({ 键, 根 }: 拖动目标) => JSON.stringify([键, 根]);
+const 可搬运 = ({ 元素, 安排 }: 映射项) =>
+  !(元素 instanceof 拼音元素) && typeof 安排[0] === "string";
+
+const 分簇 = (elements: 映射项[]) => {
+  const 簇: 映射项[][] = [];
+  for (const 项 of elements) {
+    // 翻转决策按引用关系展开，引用首码的元素紧跟其主根。
+    if (typeof 项.安排[0] === "string" || !簇.length) 簇.push([项]);
+    else 簇.at(-1)!.push(项);
+  }
+  return 簇;
+};
+
+const 簇名 = (簇: 映射项[]) => 簇[0]!.元素.获取名称();
+
+function 拖动手柄({
+  目标,
+  标签,
+  children,
+}: {
+  目标: 拖动目标;
+  标签: string;
+  children: React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id: 拖动ID(目标),
+    data: 目标,
+  });
+  return (
+    <Button
+      ref={setNodeRef}
+      size="small"
+      type="text"
+      aria-label={标签}
+      title={标签}
+      className="touch-none cursor-grab"
+      style={{ transform: CSS.Translate.toString(transform) }}
+      {...attributes}
+      {...listeners}
+    >
+      {children}
+    </Button>
+  );
+}
+
+function 字根簇({ symbol, 簇 }: { symbol: string; 簇: 映射项[] }) {
+  const 目标 = { 键: symbol, 根: 簇名(簇) };
+  const { setNodeRef, isOver } = useDroppable({ id: 拖动ID(目标), data: 目标 });
+  const 可拖 = 可搬运(簇[0]!);
+  return (
+    <Flex
+      ref={setNodeRef}
+      align="center"
+      gap="small"
+      className={isOver ? "outline rounded outline-blue-400" : undefined}
+    >
+      {可拖 && (
+        <拖动手柄 目标={目标} 标签={`拖动 ${目标.根}`}>
+          <MenuOutlined />
+        </拖动手柄>
+      )}
+      {簇.map(({ 元素, 安排 }) => (
+        <Flex key={元素.获取名称()} align="center">
+          {typeof 安排[0] !== "string" && <sup title="引用首码">2</sup>}
+          <AdjustableElementGroup element={元素} value={安排} />
+        </Flex>
+      ))}
+    </Flex>
+  );
+}
+
 const MappingRow = memo(
-  ({
-    symbol,
-    elements,
-  }: {
-    symbol: string;
-    elements: { 元素: 元素; 安排: 强类型非归并安排 }[];
-  }) => {
+  ({ symbol, clusters }: { symbol: string; clusters: 映射项[][] }) => {
     const [alphabet, setAlphabet] = useAtom(字母表原子);
+    const 目标 = { 键: symbol };
+    const { setNodeRef, isOver } = useDroppable({
+      id: 拖动ID(目标),
+      data: 目标,
+    });
     return (
-      <Flex className="border-t border-[#aaa]">
+      <Flex
+        ref={setNodeRef}
+        className={`border-t border-[#aaa] min-h-9 ${isOver ? "bg-blue-50" : ""}`}
+      >
         <Button
           shape="circle"
           type="text"
           danger
-          disabled={elements.length > 0}
+          disabled={clusters.length > 0}
           onClick={() =>
-            setAlphabet(
-              Array.from(alphabet)
-                .filter((x) => x !== symbol)
-                .join(""),
-            )
+            setAlphabet([...alphabet].filter((x) => x !== symbol).join(""))
           }
           icon={<DeleteOutlined />}
         />
-        <Item>{symbol}</Item>
+        <拖动手柄 目标={目标} 标签={`对换 ${symbol} 行`}>
+          {symbol}
+        </拖动手柄>
         <Flex align="center" wrap="wrap" gap="small">
-          {elements.map(({ 元素, 安排 }) => (
-            <AdjustableElementGroup
-              key={元素.获取名称()}
-              element={元素}
-              value={安排}
-            />
+          {clusters.map((簇) => (
+            <字根簇 key={簇名(簇)} symbol={symbol} 簇={簇} />
           ))}
         </Flex>
       </Flex>
@@ -593,18 +689,124 @@ const MappingRow = memo(
   },
 );
 
+const 查找落点: CollisionDetection = (args) => {
+  const 行拖动 =
+    (args.active.data.current as 拖动目标 | undefined)?.根 === undefined;
+  const 目标 = {
+    ...args,
+    droppableContainers: args.droppableContainers.filter(
+      (container) =>
+        container.id !== args.active.id &&
+        (!行拖动 || !container.data.current?.根),
+    ),
+  };
+  if (!args.pointerCoordinates) return closestCenter(目标);
+  return pointerWithin(目标).sort(
+    (a, b) =>
+      Number(
+        Boolean(
+          目标.droppableContainers.find((x) => x.id === b.id)?.data.current?.根,
+        ),
+      ) -
+      Number(
+        Boolean(
+          目标.droppableContainers.find((x) => x.id === a.id)?.data.current?.根,
+        ),
+      ),
+  );
+};
+
 export default function MappingComponent() {
   const 翻转决策 = useAtomValueUnwrapped(强类型翻转决策原子);
+  const 决策 = useAtomValueUnwrapped(强类型决策原子);
+  const 设决策 = useSetAtom(强类型决策原子);
+  const 方案 = useAtomValue(方案序列号原子);
+  const [顺序, 设顺序] = useAtom(行顺序存储(方案));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor),
+  );
+  const 行 = new Map(
+    [...翻转决策].map(([键, 元素]) => {
+      const 优先 = new Map((顺序[键] ?? []).map((name, i) => [name, i]));
+      return [
+        键,
+        sortBy(分簇(元素), (簇) => 优先.get(簇名(簇)) ?? Infinity),
+      ] as const;
+    }),
+  );
+
+  function 拖动结束({ active, over }: DragEndEvent) {
+    const 起点 = active.data.current as 拖动目标 | undefined;
+    const 落点 = over?.data.current as 拖动目标 | undefined;
+    if (!起点 || !落点 || active.id === over?.id) return;
+    const { 键: 原键, 根 } = 起点;
+    const { 键: 新键 } = 落点;
+    const 原行 = 行.get(原键) ?? [];
+    const 新行 = 行.get(新键) ?? [];
+    const 新决策 = new Map(决策);
+    const 移首键 = ([项]: 映射项[], 键: string) => {
+      if (!项 || !可搬运(项)) return;
+      const 原 = 项.安排;
+      新决策.set(
+        项.元素,
+        typeof 原 === "string"
+          ? 键 + [...原].slice(1).join("")
+          : [键, ...原.slice(1)],
+      );
+    };
+    if (根 === undefined) {
+      if (原键 === 新键) return;
+      const A = 原行.filter(([项]) => 项 && 可搬运(项));
+      const B = 新行.filter(([项]) => 项 && 可搬运(项));
+      if (!A.length && !B.length) return;
+      for (const 簇 of A) 移首键(簇, 新键);
+      for (const 簇 of B) 移首键(簇, 原键);
+      设顺序({
+        ...顺序,
+        [原键]: [...B, ...原行.filter((x) => !A.includes(x))].map(簇名),
+        [新键]: [...A, ...新行.filter((x) => !B.includes(x))].map(簇名),
+      });
+      设决策(新决策);
+      return;
+    }
+    const i = 原行.findIndex((簇) => 簇名(簇) === 根);
+    const 簇 = 原行[i];
+    if (!簇 || !可搬运(簇[0]!)) return;
+    const j = 新行.findIndex((项) => 簇名(项) === 落点.根);
+    if (原键 === 新键) {
+      设顺序({
+        ...顺序,
+        [原键]: arrayMove(原行, i, j < 0 ? 原行.length - 1 : j).map(簇名),
+      });
+      return;
+    }
+    const 目标顺序 = 新行.map(簇名);
+    目标顺序.splice(j < 0 ? 目标顺序.length : j, 0, 根);
+    移首键(簇, 新键);
+    设顺序({
+      ...顺序,
+      [原键]: 原行.filter((项) => 项 !== 簇).map(簇名),
+      [新键]: 目标顺序,
+    });
+    设决策(新决策);
+  }
 
   return (
     <Flex vertical gap="small">
       <MappingHeader />
-      <List
-        dataSource={[...翻转决策]}
-        renderItem={([key, roots]) => (
-          <MappingRow key={key} symbol={key} elements={roots} />
-        )}
-      />
+      <DndContext
+        sensors={sensors}
+        collisionDetection={查找落点}
+        onDragEnd={拖动结束}
+      >
+        <List
+          dataSource={[...行]}
+          renderItem={([key, clusters]) => (
+            <MappingRow key={key} symbol={key} clusters={clusters} />
+          )}
+        />
+      </DndContext>
       <MappingSpace />
     </Flex>
   );

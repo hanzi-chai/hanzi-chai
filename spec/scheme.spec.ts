@@ -17,6 +17,7 @@ import {
   检查方案元素,
   添加优先简码,
   组装,
+  组装方案,
   获取默认目标,
   解析自定义拆分部件,
   解释取码,
@@ -24,6 +25,7 @@ import {
   计算全部合法元素与元素映射,
   计算拼音分析与元素映射,
   运行方案,
+  选取当前组装条目,
 } from "../src/index.js";
 import {
   characters,
@@ -395,7 +397,25 @@ describe("完整方案运行", () => {
         { value: null, score: 0 },
       ],
     };
-    const run = 运行方案(fixtureContext(config));
+    const context = fixtureContext(config);
+    const assembly = 组装方案(context);
+    if (!assembly.dynamic) throw new Error("缺少动态条目");
+    const enabled = 选取当前组装条目(assembly.条目, context.决策);
+    const withoutRoot = new Map(context.决策);
+    withoutRoot.delete(context.名称映射.get("二")!);
+    const disabled = 选取当前组装条目(assembly.条目, withoutRoot);
+    expect(enabled.map((item) => item?.词[0]?.获取名称())).toEqual([
+      "一",
+      "二",
+    ]);
+    expect(enabled[1]?.元素序列.元素序列.map(下转换)).toEqual([
+      { element: "二", index: 0 },
+    ]);
+    expect(disabled[1]?.元素序列.元素序列.map(下转换)).toEqual([
+      { element: "1", index: 0 },
+      { element: "1", index: 0 },
+    ]);
+    const run = 运行方案(context);
     const entry = run.词列表.find((x) => x.词 === "二")!;
     expect(entry.全部元素序列).toEqual([
       {

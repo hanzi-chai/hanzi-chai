@@ -34,6 +34,7 @@ const items: MenuProps["items"] = [
   { label: "拆分", key: "analysis", icon: <AppstoreOutlined /> },
   { label: "编码", key: "assembly", icon: <OrderedListOutlined /> },
   { label: "校对", key: "debug", icon: <BoldOutlined /> },
+  { label: "指标", key: "metrics", icon: <NumberOutlined /> },
   { label: "统计一", key: "statistics", icon: <NumberOutlined /> },
   { label: "统计二", key: "statistics2", icon: <NumberOutlined /> },
   { label: "智能选根", key: "root-analyzer", icon: <PlusCircleOutlined /> },
