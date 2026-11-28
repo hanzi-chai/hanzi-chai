@@ -8,7 +8,7 @@ import {
   识别符,
 } from "hanzi-chai";
 import { range } from "lodash-es";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import {
   useAtom,
   useAtomValue,
@@ -22,6 +22,7 @@ import {
   联合结果原子,
 } from "~/atoms";
 import { exportTSV } from "~/utils";
+import { use多重排序 } from "./table-sort";
 import { CodePositionDisplay, Select } from "./Utils";
 
 export function 编码渲染({ code, rank }: { code: string; rank: number }) {
@@ -81,12 +82,15 @@ const getColumnSearchProps = (
     </Flex>
   ),
   onFilter: (value, record) => {
-    const regex = new RegExp(value as string, "u");
     const entry = record[dataIndex];
     const text = Array.isArray(entry)
       ? entry.map((x) => x.获取名称()).join("")
       : entry;
-    return regex.test(text);
+    try {
+      return new RegExp(String(value), "u").test(text);
+    } catch {
+      return text.includes(String(value));
+    }
   },
 });
 
@@ -247,19 +251,29 @@ export default function SequenceTable() {
     Map<string, PendingChange>
   >(new Map());
 
-  const dataSource = 联合结果.map((x, i) => ({
-    ...x,
-    key: 识别符(x.词, x.拼音来源列表),
-    originalIndex: i,
-  }));
-
-  dataSource.sort((a, b) => b.频率 - a.频率);
+  const dataSource = useMemo(
+    () =>
+      联合结果.map((x, key) => ({ ...x, key })).sort((a, b) => b.频率 - a.频率),
+    [联合结果],
+  );
+  const { 列排序, onChange } = use多重排序<联合条目>("编码", [
+    "词",
+    "频率",
+    "all",
+    "全码",
+    "简码",
+    ...range(最大码长).map((i) => `元素-${i}`),
+  ]);
 
   const columns: ProColumns<联合条目>[] = [
     {
-      title: "名称",
+      ...列排序("词", "名称", (a, b) =>
+        a.词
+          .map((c) => c.获取名称())
+          .join("")
+          .localeCompare(b.词.map((c) => c.获取名称()).join("")),
+      ),
       dataIndex: "词",
-      sortDirections: ["ascend", "descend"],
       width: 96,
       ...getColumnSearchProps("词"),
       render: (_, record) => (
@@ -267,10 +281,8 @@ export default function SequenceTable() {
       ),
     },
     {
-      title: "频率",
+      ...列排序("频率", "频率", (a, b) => a.频率 - b.频率),
       dataIndex: "频率",
-      sorter: (a, b) => a.频率 - b.频率,
-      sortDirections: ["ascend", "descend"],
       width: 96,
     },
     {
@@ -281,8 +293,11 @@ export default function SequenceTable() {
       width: 128,
     },
     {
-      title: "全部元素",
-      key: "all",
+      ...列排序("all", "全部元素", (a, b) =>
+        总序列化(a.元素序列.元素序列).localeCompare(
+          总序列化(b.元素序列.元素序列),
+        ),
+      ),
       render: (_, record) => {
         return (
           <Space>
@@ -291,11 +306,6 @@ export default function SequenceTable() {
             ))}
           </Space>
         );
-      },
-      sorter: (a, b) => {
-        const ahash = 总序列化(a.元素序列.元素序列);
-        const bhash = 总序列化(b.元素序列.元素序列);
-        return ahash.localeCompare(bhash);
       },
       width: 128,
       ellipsis: true,
@@ -318,17 +328,15 @@ export default function SequenceTable() {
       }
     }
     columns.push({
-      title: `元素 ${i + 1}`,
+      ...列排序(`元素-${i}`, `元素 ${i + 1}`, (a, b) =>
+        序列化(a.元素序列.元素序列[i]).localeCompare(
+          序列化(b.元素序列.元素序列[i]),
+        ),
+      ),
       render: (_, record) => {
         const element = record.元素序列.元素序列[i];
         return element ? <CodePositionDisplay element={element} /> : null;
       },
-      sorter: (a, b) => {
-        const ahash = 序列化(a.元素序列.元素序列[i] ?? "");
-        const bhash = 序列化(b.元素序列.元素序列[i] ?? "");
-        return ahash.localeCompare(bhash);
-      },
-      sortDirections: ["ascend", "descend"],
       width: 96,
       onFilter: (value, record) => {
         const element = record.元素序列.元素序列[i];
@@ -390,7 +398,7 @@ export default function SequenceTable() {
       ),
     },
     {
-      title: "全码",
+      ...列排序("全码", "全码", (a, b) => a.全码.localeCompare(b.全码)),
       width: 96,
       render: (_, record) => (
         <编码渲染 code={record.全码} rank={Math.abs(record.全码排名)} />
@@ -398,7 +406,7 @@ export default function SequenceTable() {
       ...getColumnSearchProps("全码"),
     },
     {
-      title: "简码",
+      ...列排序("简码", "简码", (a, b) => a.简码.localeCompare(b.简码)),
       width: 96,
       render: (_, record) => (
         <编码渲染 code={record.简码} rank={Math.abs(record.简码排名)} />
@@ -412,6 +420,7 @@ export default function SequenceTable() {
       scroll={{ y: 1080 }}
       columns={columns}
       dataSource={dataSource}
+      onChange={onChange}
       size="small"
       pagination={{ pageSize: 100 }}
       search={false}

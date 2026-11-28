@@ -1,10 +1,13 @@
+import type { 评估指标 } from "hanzi-chai";
 import {
+  err,
   GF0014映射,
   ok,
   type 元素,
   决策图,
   分析拼音,
   动态组装,
+  type 动态组装条目,
   type 原始词典,
   合并拼写运算,
   type 基本字形数据,
@@ -37,12 +40,13 @@ import {
   type 自定义分析,
   计算全部合法元素与元素映射,
   计算拼音分析与元素映射,
+  选取当前组装条目,
   type 键位分布目标,
 } from "hanzi-chai";
 import { atom } from "jotai";
 import { MiniDb } from "jotai-minidb";
 import { sortBy } from "lodash-es";
-import type { Metric } from "~/components/MetricTable";
+import { 保存编码快照, 读取编码快照 } from "~/encoding-snapshot";
 import { get预加载数据 } from "~/preload";
 import { thread, type 编码条目, type 编码结果 } from "~/utils";
 import {
@@ -67,7 +71,7 @@ import {
   键盘原子,
   默认目标原子,
 } from ".";
-import { 位置原子, 配置原子 } from "./config";
+import { 位置原子, 方案序列号原子, 配置原子 } from "./config";
 
 // 服务器资源
 
@@ -504,32 +508,43 @@ export const 如编码结果原子 = atom(async (get) => {
   const 默认目标 = get(默认目标原子);
   const 如前端输入 = get(如前端输入原子);
   if (!如前端输入.ok) return 如前端输入;
-  const result = await thread.spawn<[编码结果, Metric]>("encode", [
-    如前端输入.value,
+  const 方案 = get(方案序列号原子);
+  const 输入 = 如前端输入.value;
+  const { key, result: 已存结果 } = await 读取编码快照(方案, 输入, 默认目标);
+  if (已存结果) return ok(已存结果);
+  const result = await thread.spawn<[编码结果, 评估指标]>("encode", [
+    输入,
     默认目标,
   ]);
+  if (key) void 保存编码快照(方案, key, result);
   return ok(result);
 });
 
 export interface 联合条目 extends 组装条目, Omit<编码条目, "词"> {}
 
 export const 联合结果原子 = atom(async (get) => {
-  const 如组装结果 = get(如组装结果原子);
-  if (!如组装结果.ok) return 如组装结果;
+  const 动态 = get(动态分析原子);
+  const 如线性化 = 动态 ? get(强类型决策原子) : undefined;
+  if (如线性化 && !如线性化.ok) return 如线性化;
+  const 如组装 = 动态 ? get(如动态组装结果原子) : get(如组装结果原子);
+  if (!如组装.ok) return 如组装;
+  const 组装结果 = 如线性化?.ok
+    ? 选取当前组装条目(如组装.value as 动态组装条目[], 如线性化.value)
+    : (如组装.value as 组装条目[]);
   const 如编码结果 = await get(如编码结果原子);
   if (!如编码结果.ok) return 如编码结果;
   const [编码结果] = 如编码结果.value;
-  const combined: 联合条目[] = 如组装结果.value.map((x, i) => {
-    const { 词, ...rest } = 编码结果[i] ?? {
-      全码: "",
-      简码: "",
-      全码排名: 0,
-      简码排名: 0,
-    };
-    return {
-      ...x,
-      ...rest,
-    };
-  });
+  if (组装结果.length !== 编码结果.length) {
+    return err(new Error("编码结果与组装条目数量不一致"));
+  }
+  const combined: 联合条目[] = [];
+  for (const [i, 编码] of 编码结果.entries()) {
+    const 组装 = 组装结果[i];
+    if (!组装 || 组装.词.map((x) => x.获取名称()).join("") !== 编码.词) {
+      return err(new Error(`找不到「${编码.词}」对应的组装条目`));
+    }
+    const { 词: _, ...码 } = 编码;
+    combined.push({ ...组装, ...码 });
+  }
   return ok(combined);
 });

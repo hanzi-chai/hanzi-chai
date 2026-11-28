@@ -10,7 +10,6 @@ import {
   组装器原子,
 } from "~/atoms";
 import { ErrorBoundary } from "~/components/Error";
-import MetricTable from "~/components/MetricTable";
 import MultipleRules from "~/components/MultipleRules";
 import SelectRules from "~/components/SelectRules";
 import SequenceTable from "~/components/SequenceTable";
@@ -70,7 +69,6 @@ export default function Assembly() {
       <ConfigureRules />
       <ErrorBoundary>
         <Suspense fallback={<Skeleton active />}>
-          <MetricTable />
           <SequenceTable />
         </Suspense>
       </ErrorBoundary>
