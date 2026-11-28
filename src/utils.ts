@@ -375,10 +375,12 @@ export function 构建强类型决策与决策空间(
 ) {
   const 强类型决策 = new Map<元素, 强类型非空安排>();
   const 强类型决策空间 = new Map<元素, 强类型安排描述[]>();
-  const 当前元素名称映射 = new Map<string, 元素>(元素名称映射);
+  let 当前元素名称映射 = 元素名称映射;
   for (const 元素名称 of Object.keys(决策).concat(Object.keys(决策空间))) {
-    const 元素 = 元素名称映射.get(元素名称);
-    if (!元素) {
+    if (!当前元素名称映射.has(元素名称)) {
+      if (当前元素名称映射 === 元素名称映射) {
+        当前元素名称映射 = new Map(元素名称映射);
+      }
       当前元素名称映射.set(元素名称, new 未知元素(元素名称));
     }
   }
